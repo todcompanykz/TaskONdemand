@@ -94,7 +94,7 @@ export default function FeedPage() {
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Задачи поблизости (1 км)</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Астана</h1>
           <button
             onClick={loadTasks}
             className="btn-outline text-sm"

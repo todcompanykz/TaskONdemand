@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import ThemeToggle from '@/components/ThemeToggle'
 
 export default function LoginPage() {
   const router = useRouter()
   const { login } = useAuth()
+  const { t } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -23,7 +25,7 @@ export default function LoginPage() {
       await login(email, password)
       router.push('/feed')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка входа')
+      setError(err.response?.data?.message || t('auth.loginError'))
     } finally {
       setLoading(false)
     }
@@ -36,8 +38,8 @@ export default function LoginPage() {
       </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Task on Demand</h1>
-          <p className="text-gray-600 dark:text-gray-400">Вход в систему</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('common.taskOnDemand')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('auth.loginTitle')}</p>
         </div>
 
         <div className="card">
@@ -50,7 +52,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="email" className="label">
-                Email
+                {t('auth.email')}
               </label>
               <input
                 id="email"
@@ -65,7 +67,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="label">
-                Пароль
+                {t('auth.password')}
               </label>
               <input
                 id="password"
@@ -83,15 +85,15 @@ export default function LoginPage() {
               disabled={loading}
               className="btn-primary w-full"
             >
-              {loading ? 'Вход...' : 'Войти'}
+              {loading ? t('auth.loginLoading') : t('auth.loginButton')}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Нет аккаунта?{' '}
+              {t('auth.noAccount')}{' '}
               <Link href="/register" className="text-primary hover:underline font-medium">
-                Зарегистрироваться
+                {t('auth.registerLink')}
               </Link>
             </p>
           </div>

@@ -8,7 +8,7 @@ interface AuthContextType {
   loading: boolean
   isAdmin: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, phoneNumber?: string) => Promise<void>
+  register: (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => Promise<void>
   logout: () => void
 }
 
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.user)
   }
 
-  const register = async (email: string, password: string, phoneNumber?: string) => {
-    const response = await authApi.register(email, password, phoneNumber)
+  const register = async (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => {
+    const response = await authApi.register(email, firstName, lastName, password, confirmPassword, phoneNumber)
     localStorage.setItem('token', response.accessToken)
     localStorage.setItem('user', JSON.stringify(response.user))
     setUser(response.user)

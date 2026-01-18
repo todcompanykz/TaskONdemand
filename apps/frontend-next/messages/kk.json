@@ -1,0 +1,116 @@
+{
+  "common": {
+    "taskOnDemand": "Task on Demand",
+    "loading": "Жүктелуде...",
+    "error": "Қате",
+    "save": "Сақтау",
+    "cancel": "Болдырмау",
+    "delete": "Жою",
+    "edit": "Өңдеу",
+    "close": "Жабу"
+  },
+  "auth": {
+    "login": "Кіру",
+    "loginTitle": "Жүйеге кіру",
+    "loginButton": "Кіру",
+    "loginLoading": "Кіруде...",
+    "loginError": "Кіру қатесі",
+    "register": "Тіркелу",
+    "registerTitle": "Тіркелу",
+    "registerButton": "Тіркелу",
+    "registerLoading": "Тіркелуде...",
+    "registerError": "Тіркелу қатесі",
+    "logout": "Шығу",
+    "email": "Email",
+    "password": "Құпия сөз",
+    "confirmPassword": "Құпия сөзді растау",
+    "firstName": "Аты",
+    "lastName": "Тегі",
+    "phoneNumber": "Телефон нөмірі",
+    "phoneOptional": "Телефон нөмірі (міндетті емес)",
+    "noAccount": "Аккаунт жоқ па?",
+    "haveAccount": "Аккаунт бар ма?",
+    "registerLink": "Тіркелу",
+    "loginLink": "Кіру",
+    "passwordMinLength": "Кемінде 6 таңба",
+    "passwordMismatch": "Құпия сөздер сәйкес келмейді"
+  },
+  "nav": {
+    "feed": "Лента",
+    "createTask": "Тапсырма құру",
+    "myTasks": "Менің тапсырмаларым",
+    "admin": "Әкімші"
+  },
+  "task": {
+    "create": "Тапсырма құру",
+    "createTitle": "Тапсырма құру",
+    "shortDescription": "Қысқаша сипаттама",
+    "fullDescription": "Толық сипаттама",
+    "description": "Сипаттама",
+    "location": "Орналасқан жері",
+    "reward": "Сыйақы",
+    "urgency": "Шұғылдығы",
+    "city": "Қала",
+    "address": "Мекенжай",
+    "createdAt": "Құрылған",
+    "expiresAt": "Аяқталады",
+    "claim": "Тапсырманы алу",
+    "cancel": "Тапсырманы болдырмау",
+    "refuse": "Тапсырмадан бас тарту",
+    "confirmWork": "Жұмысты растау",
+    "confirmPayment": "Төлемді растау",
+    "workConfirmed": "Жұмыс расталды",
+    "paymentConfirmed": "Төлем расталды",
+    "completed": "Орындалды",
+    "expired": "Мерзімі өтті",
+    "expiredMessage": "Тапсырма мерзімі өтті",
+    "expiredDescription": "Бұл тапсырма 24 сағаттан кейін құрылған және автоматты түрде мерзімі өткен.",
+    "placeholders": {
+      "shortDescription": "Мысалы: Пакет жеткізу",
+      "fullDescription": "Тапсырманың толық сипаттамасы...",
+      "phone": "+77001234567"
+    },
+    "noTasks": "Тапсырма жоқ",
+    "noTasksFound": "Тапсырма табылмады"
+  },
+  "status": {
+    "created": "Құрылған",
+    "claimed": "Алынған",
+    "completed": "Орындалған",
+    "cancelled": "Болдырылған",
+    "expired": "Мерзімі өткен"
+  },
+  "urgency": {
+    "low": "Төмен",
+    "medium": "Орташа",
+    "high": "Жоғары"
+  },
+  "user": {
+    "profile": "Профиль",
+    "averageRating": "Орташа рейтинг",
+    "completedTasks": "Орындалған тапсырмалар",
+    "noRatings": "Рейтинг жоқ",
+    "reviews": "Пікірлер",
+    "noReviews": "Әлі пікір жоқ",
+    "editProfile": "Профильді өңдеу",
+    "editProfileNotImplemented": "Профильді өңдеу (MVP: жүзеге асырылмаған)"
+  },
+  "review": {
+    "leaveReview": "Пікір қалдыру",
+    "rating": "Рейтинг",
+    "comment": "Пікір",
+    "commentOptional": "Пікір (міндетті емес)",
+    "commentPlaceholder": "Пікіріңіз... (300 таңбаға дейін)",
+    "submit": "Пікір жіберу",
+    "submitting": "Жіберілуде...",
+    "error": "Пікір жіберу қатесі",
+    "ratedTask": "тапсырманы бағалады"
+  },
+  "admin": {
+    "title": "Әкімші панелі",
+    "users": "Пайдаланушылар",
+    "tasks": "Тапсырмалар",
+    "stats": "Статистика",
+    "deleteTask": "Жою"
+  }
+}

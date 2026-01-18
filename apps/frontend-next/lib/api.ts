@@ -39,10 +39,44 @@ api.interceptors.response.use(
 export interface User {
   id: string
   email: string
+  firstName?: string
+  lastName?: string
   phoneNumber?: string
+  ratingAvg?: number
+  ratingCount?: number
+  completedTasksCount?: number
   createdAt?: string
   updatedAt?: string
   isAdmin?: boolean // Computed on frontend based on email
+}
+
+export interface Review {
+  id: string
+  rating: number
+  comment?: string
+  createdAt: string
+  fromUser: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+  task: {
+    id: string
+    shortDescription: string
+  }
+}
+
+export interface UserProfile {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phoneNumber?: string
+  ratingAvg: number
+  ratingCount: number
+  completedTasksCount: number
+  createdAt: string
+  reviews: Review[]
 }
 
 export interface Task {
@@ -76,8 +110,8 @@ export interface CreateTaskDto {
 }
 
 export const authApi = {
-  register: async (email: string, password: string, phoneNumber?: string) => {
-    const { data } = await api.post('/auth/register', { email, password, phoneNumber })
+  register: async (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => {
+    const { data } = await api.post('/auth/register', { email, firstName, lastName, password, confirmPassword, phoneNumber })
     return data
   },
   login: async (email: string, password: string) => {
@@ -135,6 +169,21 @@ export const tasksApi = {
 export const usersApi = {
   getMe: async () => {
     const { data } = await api.get('/users/me')
+    return data
+  },
+  getProfile: async (userId: string): Promise<UserProfile> => {
+    const { data } = await api.get(`/users/${userId}/profile`)
+    return data
+  },
+}
+
+export const reviewsApi = {
+  createReview: async (taskId: string, rating: number, comment?: string) => {
+    const { data } = await api.post(`/tasks/${taskId}/review`, { rating, comment })
+    return data
+  },
+  getUserReviews: async (userId: string): Promise<Review[]> => {
+    const { data } = await api.get(`/users/${userId}/reviews`)
     return data
   },
 }

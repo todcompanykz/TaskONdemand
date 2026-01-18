@@ -1,0 +1,116 @@
+{
+  "common": {
+    "taskOnDemand": "Task on Demand",
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "auth": {
+    "login": "Login",
+    "loginTitle": "Sign in",
+    "loginButton": "Sign in",
+    "loginLoading": "Signing in...",
+    "loginError": "Login error",
+    "register": "Register",
+    "registerTitle": "Registration",
+    "registerButton": "Register",
+    "registerLoading": "Registering...",
+    "registerError": "Registration error",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phoneNumber": "Phone number",
+    "phoneOptional": "Phone number (optional)",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "registerLink": "Register",
+    "loginLink": "Sign in",
+    "passwordMinLength": "Minimum 6 characters",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "nav": {
+    "feed": "Feed",
+    "createTask": "Create task",
+    "myTasks": "My tasks",
+    "admin": "Admin"
+  },
+  "task": {
+    "create": "Create task",
+    "createTitle": "Create task",
+    "shortDescription": "Short description",
+    "fullDescription": "Full description",
+    "description": "Description",
+    "location": "Location",
+    "reward": "Reward",
+    "urgency": "Urgency",
+    "city": "City",
+    "address": "Address",
+    "createdAt": "Created",
+    "expiresAt": "Expires",
+    "claim": "Claim task",
+    "cancel": "Cancel task",
+    "refuse": "Refuse task",
+    "confirmWork": "Confirm work completed",
+    "confirmPayment": "Confirm payment received",
+    "workConfirmed": "Work confirmed",
+    "paymentConfirmed": "Payment confirmed",
+    "completed": "Completed",
+    "expired": "Expired",
+    "expiredMessage": "Task expired",
+    "expiredDescription": "This task was created more than 24 hours ago and has automatically expired.",
+    "placeholders": {
+      "shortDescription": "e.g. Deliver package",
+      "fullDescription": "Detailed task description...",
+      "phone": "+77001234567"
+    },
+    "noTasks": "No tasks",
+    "noTasksFound": "No tasks found"
+  },
+  "status": {
+    "created": "Created",
+    "claimed": "Claimed",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "expired": "Expired"
+  },
+  "urgency": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "user": {
+    "profile": "Profile",
+    "averageRating": "Average rating",
+    "completedTasks": "Completed tasks",
+    "noRatings": "No ratings",
+    "reviews": "Reviews",
+    "noReviews": "No reviews yet",
+    "editProfile": "Edit profile",
+    "editProfileNotImplemented": "Edit profile (MVP: not implemented)"
+  },
+  "review": {
+    "leaveReview": "Leave review",
+    "rating": "Rating",
+    "comment": "Comment",
+    "commentOptional": "Comment (optional)",
+    "commentPlaceholder": "Your comment... (up to 300 characters)",
+    "submit": "Submit review",
+    "submitting": "Submitting...",
+    "error": "Error submitting review",
+    "ratedTask": "rated task"
+  },
+  "admin": {
+    "title": "Admin panel",
+    "users": "Users",
+    "tasks": "Tasks",
+    "stats": "Statistics",
+    "deleteTask": "Delete"
+  }
+}

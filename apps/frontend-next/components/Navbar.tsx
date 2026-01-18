@@ -4,12 +4,15 @@ import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useI18n } from '@/contexts/I18nContext'
 import ThemeToggle from '@/components/ThemeToggle'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 
 export default function Navbar() {
   const router = useRouter()
   const { user, logout, isAdmin } = useAuth()
+  const { t } = useI18n()
 
   // #region agent log
   useEffect(() => {
@@ -42,31 +45,36 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <Link href="/feed" className="text-xl font-bold text-primary dark:text-primary-light">
-              Task on Demand
+              {t('common.taskOnDemand')}
             </Link>
             <div className="hidden md:flex space-x-4">
               <Link href="/feed" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Лента
+                {t('nav.feed')}
               </Link>
               <Link href="/tasks/create" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Создать задачу
+                {t('nav.createTask')}
               </Link>
               <Link href="/tasks/history" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Мои задачи
+                {t('nav.myTasks')}
               </Link>
               {isAdmin && (
                 <Link href="/admin" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Админ
+                  {t('nav.admin')}
                 </Link>
               )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
             {user && (
-              <span className="text-sm text-gray-600 dark:text-gray-400 hidden sm:block">
-                {user.email}
-              </span>
+              <Link 
+                href={`/users/${user.id}`}
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-light hidden sm:block font-medium"
+              >
+                {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
+              </Link>
             )}
+            {/* Language Switcher */}
+            <LanguageSwitcher />
             {/* Theme Toggle Switch */}
             <div 
               className="relative flex items-center" 
@@ -79,7 +87,7 @@ export default function Navbar() {
               onClick={handleLogout}
               className="text-gray-700 dark:text-gray-300 hover:text-danger dark:hover:text-red-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
-              Выйти
+              {t('auth.logout')}
             </button>
           </div>
         </div>
