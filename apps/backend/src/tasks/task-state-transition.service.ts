@@ -111,11 +111,31 @@ export class TaskStateTransitionService {
     return await this.dataSource.transaction(async (manager) => {
       const taskRepository = manager.getRepository(Task);
 
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:114',message:'transitionToClaimed entry',data:{taskId,userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
+        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+      } catch(e) {}
+      // #endregion
+
+      // Lock task WITHOUT relations to avoid "FOR UPDATE on nullable side of outer join" error
+      // Relations are not needed for atomic claim operation
       const task = await taskRepository.findOne({
         where: { id: taskId },
         lock: { mode: 'pessimistic_write' },
-        relations: ['createdBy', 'claimedBy'],
+        // Remove relations to avoid LEFT JOIN that conflicts with FOR UPDATE
       });
+
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:119',message:'transitionToClaimed task found',data:{taskFound:!!task,taskStatus:task?.status,taskCreatedById:task?.createdById,taskClaimedById:task?.claimedById},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
+        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+      } catch(e) {}
+      // #endregion
 
       if (!task) {
         throw new BadRequestException(`Task ${taskId} not found`);
@@ -145,6 +165,15 @@ export class TaskStateTransitionService {
       task.status = TaskStatus.CLAIMED;
       task.claimedById = userId;
       const savedTask = await taskRepository.save(task);
+
+      // #region agent log
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:150',message:'transitionToClaimed success',data:{taskId,taskStatus:savedTask.status,taskClaimedById:savedTask.claimedById},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
+        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+      } catch(e) {}
+      // #endregion
 
       // Structured logging
       this.logger.log({

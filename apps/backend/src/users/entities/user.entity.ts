@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Task } from '../../tasks/entities/task.entity';
+import { Review } from '../../reviews/entities/review.entity';
 
 @Entity('users')
 export class User {
@@ -19,8 +20,20 @@ export class User {
   @Column()
   password: string; // bcrypt hashed
 
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
   @Column({ nullable: true })
   phoneNumber: string; // stored only, no SMS
+
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
+  ratingAvg: number; // 0.00 - 5.00
+
+  @Column({ type: 'int', default: 0 })
+  ratingCount: number;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -34,4 +47,10 @@ export class User {
 
   @OneToMany(() => Task, (task) => task.claimedBy)
   claimedTasks: Task[];
+
+  @OneToMany(() => Review, (review) => review.fromUser)
+  reviewsGiven: Review[];
+
+  @OneToMany(() => Review, (review) => review.toUser)
+  reviewsReceived: Review[];
 }

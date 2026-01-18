@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,6 +22,18 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<{ accessToken: string; user: User }> {
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:22',message:'Register entry',data:{email:registerDto.email,hasFirstName:!!registerDto.firstName,hasLastName:!!registerDto.lastName,hasPassword:!!registerDto.password,hasConfirmPassword:!!registerDto.confirmPassword},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
+
+    // Validate password match
+    if (registerDto.password !== registerDto.confirmPassword) {
+      throw new ConflictException('Passwords do not match');
+    }
+
     const existingUser = await this.usersRepository.findOne({
       where: { email: registerDto.email },
     });
@@ -32,11 +46,22 @@ export class AuthService {
 
     const user = this.usersRepository.create({
       email: registerDto.email,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
       password: hashedPassword,
       phoneNumber: registerDto.phoneNumber || null,
+      ratingAvg: 0,
+      ratingCount: 0,
     });
 
     await this.usersRepository.save(user);
+
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:48',message:'Register user saved',data:{userId:user.id,userFirstName:user.firstName,userLastName:user.lastName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
 
     const payload = { sub: user.id, email: user.email };
     const accessToken = this.jwtService.sign(payload);
