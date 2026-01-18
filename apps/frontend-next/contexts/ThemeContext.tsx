@@ -16,6 +16,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
+  // #region agent log
+  useEffect(() => {
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ThemeContext.tsx:19',message:'ThemeProvider useEffect start',data:{mounted},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    } catch(e) {}
+  }, [mounted]);
+  // #endregion
+
   useEffect(() => {
     setMounted(true)
     // Load theme from localStorage or system preference
@@ -24,6 +32,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const initialTheme = savedTheme || systemTheme
     setTheme(initialTheme)
     applyTheme(initialTheme)
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ThemeContext.tsx:30',message:'Theme mounted',data:{initialTheme},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    } catch(e) {}
+    // #endregion
   }, [])
 
   const applyTheme = (newTheme: Theme) => {
@@ -42,13 +55,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(newTheme)
   }
 
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>
-  }
+  // Always provide context, but use default values before mount
+  const contextValue = mounted 
+    ? { theme, toggleTheme, isDark: theme === 'dark' }
+    : { theme: 'light' as Theme, toggleTheme: () => {}, isDark: false }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   )

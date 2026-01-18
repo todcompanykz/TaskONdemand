@@ -8,9 +8,9 @@ import { tasksApi, Task } from '@/lib/api'
 import Navbar from '@/components/Navbar'
 
 const urgencyColors = {
-  low: 'bg-gray-100 text-gray-700',
-  medium: 'bg-warning/20 text-warning',
-  high: 'bg-orange-100 text-orange-700',
+  low: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300',
+  medium: 'bg-warning/20 dark:bg-warning/30 text-warning dark:text-yellow-400',
+  high: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
 }
 
 const urgencyLabels = {
@@ -58,6 +58,7 @@ export default function FeedPage() {
     if (location) {
       loadTasks()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location])
 
   const loadTasks = async () => {
@@ -76,12 +77,12 @@ export default function FeedPage() {
 
   if (authLoading || !location) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
         <Navbar />
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Загрузка...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка...</p>
           </div>
         </div>
       </div>
@@ -89,11 +90,11 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Задачи поблизости (1 км)</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Задачи поблизости (1 км)</h1>
           <button
             onClick={loadTasks}
             className="btn-outline text-sm"
@@ -104,7 +105,7 @@ export default function FeedPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
             {error}
           </div>
         )}
@@ -112,11 +113,11 @@ export default function FeedPage() {
         {loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600">Загрузка задач...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка задач...</p>
           </div>
         ) : tasks.length === 0 ? (
           <div className="card text-center py-12">
-            <p className="text-gray-600 text-lg">Нет доступных задач в радиусе 1 км</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">Нет доступных задач в радиусе 1 км</p>
             <Link href="/tasks/create" className="btn-primary mt-6 inline-block">
               Создать задачу
             </Link>
@@ -130,22 +131,22 @@ export default function FeedPage() {
                 className="card hover:shadow-md transition-shadow block"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h2 className="text-xl font-semibold text-gray-900">{task.shortDescription}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">{task.shortDescription}</h2>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${urgencyColors[task.urgency]}`}>
                     {urgencyLabels[task.urgency]}
                   </span>
                 </div>
-                <p className="text-gray-600 mb-2 line-clamp-2">{task.fullDescription}</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">{task.fullDescription}</p>
                 <div className="mb-4">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     📍 {task.city}, {task.address}
                   </p>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-primary">
+                  <span className="text-2xl font-bold text-primary dark:text-blue-400">
                     {task.reward.toLocaleString()} ₸
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     {new Date(task.createdAt).toLocaleDateString('ru-RU')}
                   </span>
                 </div>

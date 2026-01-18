@@ -1,27 +1,43 @@
 'use client'
 
+import React, { useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useTheme } from '@/contexts/ThemeContext'
+import ThemeToggle from '@/components/ThemeToggle'
+
 
 export default function Navbar() {
   const router = useRouter()
   const { user, logout, isAdmin } = useAuth()
-  const { theme, toggleTheme, isDark } = useTheme()
+
+  // #region agent log
+  useEffect(() => {
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navbar.tsx:13',message:'Navbar render',data:{hasUser:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    } catch(e) {}
+  }, [user]);
+
+  useEffect(() => {
+    try {
+      const wrapper = document.querySelector('[data-theme-toggle-wrapper="true"]')
+      const toggle = document.querySelector('[data-theme-toggle="true"]')
+      const wrapperStyles = wrapper ? window.getComputedStyle(wrapper) : null
+      const toggleStyles = toggle ? window.getComputedStyle(toggle) : null
+      const wrapperRect = wrapper?.getBoundingClientRect()
+      const toggleRect = toggle?.getBoundingClientRect()
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Navbar.tsx:20',message:'Navbar ThemeToggle wrapper check',data:{hasWrapper:!!wrapper,hasToggle:!!toggle,wrapperWidth:wrapperStyles?.width,wrapperHeight:wrapperStyles?.height,wrapperDisplay:wrapperStyles?.display,wrapperRect:wrapperRect?{x:wrapperRect.x,y:wrapperRect.y,width:wrapperRect.width,height:wrapperRect.height}:null,toggleWidth:toggleStyles?.width,toggleHeight:toggleStyles?.height,toggleDisplay:toggleStyles?.display,toggleRect:toggleRect?{x:toggleRect.x,y:toggleRect.y,width:toggleRect.width,height:toggleRect.height}:null},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'C'})}).catch(()=>{});
+    } catch(e) {}
+  }, []);
+  // #endregion
 
   const handleLogout = () => {
     logout()
     router.push('/login')
   }
 
-  const handleToggleTheme = () => {
-    console.log('Toggle theme clicked, current theme:', theme)
-    toggleTheme()
-  }
-
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
+    <nav className="bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
@@ -52,31 +68,13 @@ export default function Navbar() {
               </span>
             )}
             {/* Theme Toggle Switch */}
-            <button
-              onClick={handleToggleTheme}
-              className="relative w-14 h-8 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-              aria-label="Переключить тему"
-              type="button"
-              title={`Переключить на ${isDark ? 'светлую' : 'тёмную'} тему`}
+            <div 
+              className="relative flex items-center" 
+              style={{ width: '80px', height: '40px', minWidth: '80px', minHeight: '40px' }}
+              data-theme-toggle-wrapper="true"
             >
-              <span
-                className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                  isDark ? 'translate-x-6' : 'translate-x-0'
-                }`}
-              >
-                <span className="absolute inset-0 flex items-center justify-center">
-                  {isDark ? (
-                    <svg className="w-4 h-4 text-gray-800" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </span>
-              </span>
-            </button>
+              <ThemeToggle />
+            </div>
             <button
               onClick={handleLogout}
               className="text-gray-700 dark:text-gray-300 hover:text-danger dark:hover:text-red-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"

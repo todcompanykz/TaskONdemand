@@ -1,0 +1,66 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Sky gradient: day to night transition -->
+    <linearGradient id="skyGradient512" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3d7eae;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6fb1e7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d1f2c;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Sun glow -->
+    <radialGradient id="sunGlow512" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#ecca2f;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#ecca2f;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Rounded rectangle background (96px radius = ~18.75% for 512px) -->
+  <rect width="512" height="512" rx="96" ry="96" fill="url(#skyGradient512)"/>
+  
+  <!-- Inner border shadow effect -->
+  <rect width="512" height="512" rx="96" ry="96" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+  
+  <!-- Stars (night reference) - subtle, in upper area -->
+  <circle cx="405" cy="64" r="5" fill="white" opacity="0.8"/>
+  <circle cx="470" cy="128" r="4" fill="white" opacity="0.8"/>
+  <circle cx="384" cy="192" r="5" fill="white" opacity="0.8"/>
+  <circle cx="437" cy="149" r="4" fill="white" opacity="0.7"/>
+  <circle cx="416" cy="235" r="4" fill="white" opacity="0.7"/>
+  <circle cx="448" cy="96" r="3" fill="white" opacity="0.7"/>
+  <circle cx="360" cy="160" r="3" fill="white" opacity="0.6"/>
+  
+  <!-- Sun glow effect -->
+  <circle cx="256" cy="256" r="128" fill="url(#sunGlow512)"/>
+  
+  <!-- Sun (center, slightly offset) -->
+  <circle cx="256" cy="256" r="85" fill="#ecca2f"/>
+  <circle cx="256" cy="256" r="75" fill="#f9d71c" opacity="0.4"/>
+  
+  <!-- Inner sun highlight -->
+  <ellipse cx="256" cy="240" rx="60" ry="70" fill="rgba(255,255,255,0.3)" opacity="0.5"/>
+  
+  <!-- Clouds (day reference) - bottom area -->
+  <!-- Cloud 1 -->
+  <g transform="translate(53, 437)">
+    <ellipse cx="64" cy="27" rx="64" ry="27" fill="#f3fdff" opacity="0.85"/>
+    <circle cx="27" cy="27" r="27" fill="#f3fdff" opacity="0.85"/>
+    <circle cx="69" cy="16" r="27" fill="#f3fdff" opacity="0.85"/>
+    <circle cx="101" cy="27" r="35" fill="#f3fdff" opacity="0.85"/>
+  </g>
+  
+  <!-- Cloud 2 (smaller) -->
+  <g transform="translate(267, 416)">
+    <ellipse cx="48" cy="21" rx="48" ry="21" fill="#f3fdff" opacity="0.7"/>
+    <circle cx="21" cy="21" r="21" fill="#f3fdff" opacity="0.7"/>
+    <circle cx="53" cy="13" r="21" fill="#f3fdff" opacity="0.7"/>
+    <circle cx="80" cy="21" r="27" fill="#f3fdff" opacity="0.7"/>
+  </g>
+  
+  <!-- Cloud 3 (tiny accent) -->
+  <g transform="translate(160, 400)">
+    <ellipse cx="32" cy="14" rx="32" ry="14" fill="#f3fdff" opacity="0.6"/>
+    <circle cx="14" cy="14" r="14" fill="#f3fdff" opacity="0.6"/>
+    <circle cx="35" cy="9" r="14" fill="#f3fdff" opacity="0.6"/>
+    <circle cx="53" cy="14" r="18" fill="#f3fdff" opacity="0.6"/>
+  </g>
+</svg>
