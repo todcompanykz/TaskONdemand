@@ -1,6 +1,26 @@
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+// Auto-detect API URL based on current hostname
+// If user opens http://192.168.1.100:3000, API will be http://192.168.1.100:3001
+function getApiUrl(): string {
+  // Use environment variable if set (for explicit configuration)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL
+  }
+
+  // Auto-detect from browser location (client-side)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    const protocol = window.location.protocol
+    // Replace port 3000 with 3001, or use default 3001 if no port specified
+    return `${protocol}//${hostname}:3001`
+  }
+
+  // Server-side fallback (SSR)
+  return 'http://localhost:3001'
+}
+
+const API_URL = getApiUrl()
 
 const api = axios.create({
   baseURL: API_URL,
