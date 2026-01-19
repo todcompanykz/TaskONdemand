@@ -13,6 +13,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
+    @InjectRepository(UserNotificationSettings)
+    private notificationSettingsRepository: Repository<UserNotificationSettings>,
   ) {}
 
   async findOne(id: string): Promise<User> {
@@ -76,5 +78,70 @@ export class UsersService {
     // #endregion
 
     return profile;
+  }
+
+  async updateProfile(userId: string, updateDto: UpdateProfileDto) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (updateDto.email && updateDto.email !== user.email) {
+      const existingUser = await this.findByEmail(updateDto.email);
+      if (existingUser) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+
+    // Update user fields
+    if (updateDto.firstName !== undefined) user.firstName = updateDto.firstName;
+    if (updateDto.lastName !== undefined) user.lastName = updateDto.lastName;
+    if (updateDto.email !== undefined) user.email = updateDto.email;
+    if (updateDto.phoneNumber !== undefined) user.phoneNumber = updateDto.phoneNumber;
+
+    await this.usersRepository.save(user);
+
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    };
+  }
+
+  async getNotificationSettings(userId: string) {
+    let settings = await this.notificationSettingsRepository.findOne({
+      where: { userId },
+    });
+
+    // Create default settings if they don't exist
+    if (!settings) {
+      settings = this.notificationSettingsRepository.create({
+        userId,
+        // All defaults are true
+      });
+      settings = await this.notificationSettingsRepository.save(settings);
+    }
+
+    return settings;
+  }
+
+  async updateNotificationSettings(userId: string, updateDto: UpdateNotificationSettingsDto) {
+    let settings = await this.notificationSettingsRepository.findOne({
+      where: { userId },
+    });
+
+    if (!settings) {
+      settings = this.notificationSettingsRepository.create({
+        userId,
+        ...updateDto,
+      });
+    } else {
+      Object.assign(settings, updateDto);
+    }
+
+    return await this.notificationSettingsRepository.save(settings);
   }
 }

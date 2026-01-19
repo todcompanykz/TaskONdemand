@@ -3,6 +3,7 @@ import { config } from 'dotenv';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { Review } from '../reviews/entities/review.entity';
+import { UserNotificationSettings } from '../users/entities/user-notification-settings.entity';
 
 config();
 
@@ -13,7 +14,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'tod',
-  entities: [User, Task, Review],
+  entities: [User, Task, Review, UserNotificationSettings],
   migrations: ['src/database/migrations/*.ts'],
   synchronize: false,
   logging: true,

@@ -1,7 +1,9 @@
-import { Controller, Get, UseGuards, Request, Param } from '@nestjs/common';
+import { Controller, Get, Put, UseGuards, Request, Param, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -43,5 +45,23 @@ export class UsersController {
   @Get(':id/reviews')
   async getUserReviews(@Param('id') id: string) {
     return this.reviewsService.getUserReviews(id);
+  }
+
+  @Put('me/profile')
+  async updateProfile(@Request() req, @Body() updateDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.id, updateDto);
+  }
+
+  @Get('me/notifications')
+  async getNotificationSettings(@Request() req) {
+    return this.usersService.getNotificationSettings(req.user.id);
+  }
+
+  @Put('me/notifications')
+  async updateNotificationSettings(
+    @Request() req,
+    @Body() updateDto: UpdateNotificationSettingsDto,
+  ) {
+    return this.usersService.updateNotificationSettings(req.user.id, updateDto);
   }
 }

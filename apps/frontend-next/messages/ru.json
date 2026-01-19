@@ -7,7 +7,8 @@
     "cancel": "Отмена",
     "delete": "Удалить",
     "edit": "Редактировать",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "saving": "Сохранение..."
   },
   "auth": {
     "login": "Вход",
@@ -112,5 +113,70 @@
     "tasks": "Задачи",
     "stats": "Статистика",
     "deleteTask": "Удалить"
+  },
+  "profile": {
+    "publicProfile": "Публичный профиль",
+    "account": "Аккаунт",
+    "appearance": "Внешний вид",
+    "accessibility": "Доступность",
+    "notifications": "Уведомления"
+  },
+  "settings": {
+    "account": {
+      "title": "Настройки аккаунта",
+      "description": "Управление базовой информацией вашего аккаунта",
+      "updateSuccess": "Профиль успешно обновлён"
+    },
+    "notifications": {
+      "title": "Настройки уведомлений",
+      "description": "Управление уведомлениями, которые вы получаете",
+      "updateSuccess": "Настройки успешно обновлены",
+      "system": {
+        "title": "Системные уведомления",
+        "description": "Эти уведомления обычно нельзя полностью отключить",
+        "loginFromNewDevice": "Вход в аккаунт с нового устройства",
+        "loginFromNewDeviceDesc": "Уведомление при входе с нового устройства или браузера",
+        "passwordChange": "Смена пароля",
+        "passwordChangeDesc": "Уведомление при изменении пароля",
+        "securityErrors": "Ошибки безопасности",
+        "securityErrorsDesc": "Уведомления о подозрительной активности",
+        "accountBlocked": "Блокировка / восстановление аккаунта",
+        "accountBlockedDesc": "Уведомления о блокировке или восстановлении аккаунта"
+      },
+      "account": {
+        "title": "Аккаунт и профиль",
+        "profileChanges": "Изменения данных профиля",
+        "profileChangesDesc": "Уведомления об изменениях в вашем профиле",
+        "actionConfirmation": "Подтверждение действий",
+        "actionConfirmationDesc": "Уведомления о необходимости подтверждения важных действий",
+        "sessionExpiration": "Истечение сессии",
+        "sessionExpirationDesc": "Уведомления об истечении сессии"
+      },
+      "work": {
+        "title": "Рабочие / сервисные уведомления",
+        "newMessages": "Новые сообщения",
+        "newMessagesDesc": "Уведомления о новых сообщениях",
+        "newTasks": "Новые заявки / заказы",
+        "newTasksDesc": "Уведомления о новых задачах",
+        "taskStatusChange": "Изменение статуса задачи",
+        "taskStatusChangeDesc": "Уведомления об изменении статуса задач",
+        "taskComments": "Ответы или комментарии",
+        "taskCommentsDesc": "Уведомления о комментариях к задачам",
+        "executorAssigned": "Назначение исполнителя",
+        "executorAssignedDesc": "Уведомления о назначении исполнителя на задачу"
+      }
+    }
+  },
+  "common": {
+    "taskOnDemand": "Task on Demand",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "close": "Закрыть",
+    "saving": "Сохранение...",
+    "close": "Закрыть"
   }
 }

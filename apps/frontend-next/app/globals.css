@@ -89,6 +89,49 @@ label[data-theme-toggle="true"] .theme-toggle-container {
   position: relative !important;
 }
 
+/* Star rating (reviews) */
+.rating {
+  display: inline-flex;
+  flex-direction: row-reverse; /* enables ~ sibling selector for "fill left" effect */
+  align-items: center;
+  gap: 2px;
+}
+
+.rating input {
+  display: none;
+}
+
+.rating label {
+  cursor: pointer;
+  color: #d1d5db; /* gray-300 */
+  transition: color 0.3s ease, transform 0.12s ease;
+  user-select: none;
+  line-height: 1;
+}
+
+.dark .rating label {
+  color: #64748b; /* slate-500 */
+}
+
+.rating label:before {
+  content: "\2605";
+  font-size: 30px; /* overridden by StarRating sizePx */
+}
+
+.rating input:checked ~ label,
+.rating label:hover,
+.rating label:hover ~ label {
+  color: #ffd700;
+}
+
+.rating label:hover {
+  transform: scale(1.12);
+}
+
+.rating input:checked ~ label {
+  transform: scale(1.03);
+}
+
 /* Using :has() selector for label when checkbox is checked */
 @supports selector(:has(*)) {
   label:has(.theme-toggle-checkbox:checked) .theme-toggle-container {

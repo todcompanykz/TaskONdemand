@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => Promise<void>
   logout: () => void
+  updateUser: (userData: Partial<User>) => void
 }
 
 // Helper function to check if user is admin
@@ -71,10 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    }
+  }
+
   const isAdmin = checkIsAdmin(user?.email)
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

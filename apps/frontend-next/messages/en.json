@@ -7,7 +7,8 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "saving": "Saving..."
   },
   "auth": {
     "login": "Login",
@@ -112,5 +113,69 @@
     "tasks": "Tasks",
     "stats": "Statistics",
     "deleteTask": "Delete"
+  },
+  "profile": {
+    "publicProfile": "Public profile",
+    "account": "Account",
+    "appearance": "Appearance",
+    "accessibility": "Accessibility",
+    "notifications": "Notifications"
+  },
+  "settings": {
+    "account": {
+      "title": "Account Settings",
+      "description": "Manage your account's basic information",
+      "updateSuccess": "Profile updated successfully"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "description": "Manage notifications you receive",
+      "updateSuccess": "Settings updated successfully",
+      "system": {
+        "title": "System Notifications",
+        "description": "These notifications usually cannot be fully disabled",
+        "loginFromNewDevice": "Login from new device",
+        "loginFromNewDeviceDesc": "Notification when logging in from a new device or browser",
+        "passwordChange": "Password change",
+        "passwordChangeDesc": "Notification when password is changed",
+        "securityErrors": "Security errors",
+        "securityErrorsDesc": "Notifications about suspicious activity",
+        "accountBlocked": "Account blocked / restored",
+        "accountBlockedDesc": "Notifications about account blocking or restoration"
+      },
+      "account": {
+        "title": "Account and Profile",
+        "profileChanges": "Profile data changes",
+        "profileChangesDesc": "Notifications about changes to your profile",
+        "actionConfirmation": "Action confirmation",
+        "actionConfirmationDesc": "Notifications about the need to confirm important actions",
+        "sessionExpiration": "Session expiration",
+        "sessionExpirationDesc": "Notifications about session expiration"
+      },
+      "work": {
+        "title": "Work / Service Notifications",
+        "newMessages": "New messages",
+        "newMessagesDesc": "Notifications about new messages",
+        "newTasks": "New requests / orders",
+        "newTasksDesc": "Notifications about new tasks",
+        "taskStatusChange": "Task status change",
+        "taskStatusChangeDesc": "Notifications about task status changes",
+        "taskComments": "Replies or comments",
+        "taskCommentsDesc": "Notifications about task comments",
+        "executorAssigned": "Executor assigned",
+        "executorAssignedDesc": "Notifications about executor assignment to tasks"
+      }
+    }
+  },
+  "common": {
+    "taskOnDemand": "Task on Demand",
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "saving": "Saving..."
   }
 }

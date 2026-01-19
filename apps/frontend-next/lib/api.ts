@@ -186,6 +186,47 @@ export const tasksApi = {
   },
 }
 
+export interface UpdateProfileData {
+  firstName?: string
+  lastName?: string
+  email?: string
+  phoneNumber?: string
+}
+
+export interface NotificationSettings {
+  id: string
+  userId: string
+  loginFromNewDevice: boolean
+  passwordChange: boolean
+  securityErrors: boolean
+  accountBlocked: boolean
+  profileChanges: boolean
+  actionConfirmation: boolean
+  sessionExpiration: boolean
+  newMessages: boolean
+  newTasks: boolean
+  taskStatusChange: boolean
+  taskComments: boolean
+  executorAssigned: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface UpdateNotificationSettingsData {
+  loginFromNewDevice?: boolean
+  passwordChange?: boolean
+  securityErrors?: boolean
+  accountBlocked?: boolean
+  profileChanges?: boolean
+  actionConfirmation?: boolean
+  sessionExpiration?: boolean
+  newMessages?: boolean
+  newTasks?: boolean
+  taskStatusChange?: boolean
+  taskComments?: boolean
+  executorAssigned?: boolean
+}
+
 export const usersApi = {
   getMe: async () => {
     const { data } = await api.get('/users/me')
@@ -193,6 +234,18 @@ export const usersApi = {
   },
   getProfile: async (userId: string): Promise<UserProfile> => {
     const { data } = await api.get(`/users/${userId}/profile`)
+    return data
+  },
+  updateProfile: async (updateData: UpdateProfileData) => {
+    const { data } = await api.put('/users/me/profile', updateData)
+    return data
+  },
+  getNotificationSettings: async (): Promise<NotificationSettings> => {
+    const { data } = await api.get('/users/me/notifications')
+    return data
+  },
+  updateNotificationSettings: async (updateData: UpdateNotificationSettingsData): Promise<NotificationSettings> => {
+    const { data } = await api.put('/users/me/notifications', updateData)
     return data
   },
 }

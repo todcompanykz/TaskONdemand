@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import UserDropdownMenu from '@/components/UserDropdownMenu'
 
 
 export default function Navbar() {
@@ -34,10 +35,6 @@ export default function Navbar() {
   }, []);
   // #endregion
 
-  const handleLogout = () => {
-    logout()
-    router.push('/login')
-  }
 
   return (
     <nav className="bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
@@ -65,14 +62,7 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {user && (
-              <Link 
-                href={`/users/${user.id}`}
-                className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary-light hidden sm:block font-medium"
-              >
-                {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
-              </Link>
-            )}
+            {user && <UserDropdownMenu />}
             {/* Language Switcher */}
             <LanguageSwitcher />
             {/* Theme Toggle Switch */}
@@ -83,12 +73,6 @@ export default function Navbar() {
             >
               <ThemeToggle />
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-gray-700 dark:text-gray-300 hover:text-danger dark:hover:text-red-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              {t('auth.logout')}
-            </button>
           </div>
         </div>
       </div>
