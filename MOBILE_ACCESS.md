@@ -85,7 +85,7 @@ http://192.168.1.100:3000
 
 Замените `192.168.1.100` на IP-адрес вашего компьютера из Шага 1.
 
-## Шаг 4: Разрешите доступ через брандмауэр (если не открывается)
+## Шаг 5: Разрешите доступ через брандмауэр (если не открывается)
 
 Если страница не открывается, возможно, нужно разрешить доступ через брандмауэр Windows:
 
@@ -103,7 +103,7 @@ New-NetFirewallRule -DisplayName "Task on Demand Frontend" -Direction Inbound -L
 New-NetFirewallRule -DisplayName "Task on Demand Backend" -Direction Inbound -LocalPort 3001 -Protocol TCP -Action Allow
 ```
 
-## Шаг 5: Проверка подключения
+## Шаг 6: Проверка подключения
 
 После открытия приложения на телефоне вы должны увидеть:
 - Страницу входа или ленту задач (если уже авторизованы)
@@ -119,8 +119,9 @@ New-NetFirewallRule -DisplayName "Task on Demand Backend" -Direction Inbound -Lo
 
 ### Проблема: Ошибка подключения к API
 - ✅ Backend должен быть доступен по адресу `http://[IP]:3001`
-- ✅ Проверьте, что в `apps/frontend-next/lib/api.ts` используется правильный API URL
-- ✅ Если используется `localhost`, замените на IP-адрес компьютера
+- ✅ **Обязательно** настройте `NEXT_PUBLIC_API_URL` в `.env` или `docker-compose.yml` (см. Шаг 3)
+- ✅ После изменения `NEXT_PUBLIC_API_URL` перезапустите frontend: `docker compose restart frontend`
+- ✅ Проверьте, что backend отвечает: откройте `http://[IP]:3001/health` в браузере
 
 ### Проблема: Медленная загрузка
 - ✅ Это нормально для локальной сети
