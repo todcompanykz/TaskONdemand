@@ -5,10 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi } from '@/lib/api'
 import Navbar from '@/components/Navbar'
+import { useToast } from '@/contexts/ToastContext'
+import { useI18n } from '@/contexts/I18nContext'
 
 export default function CreateTaskPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { showToast } = useToast()
+  const { t } = useI18n()
   const [formData, setFormData] = useState({
     shortDescription: '',
     fullDescription: '',
@@ -68,9 +72,12 @@ export default function CreateTaskPage() {
       fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks/create/page.tsx:handleSubmit:before-api',message:'About to send create task request',data:{payload:requestPayload,hasLongitude:'longitude' in requestPayload,hasLatitude:'latitude' in requestPayload,hasCity:'city' in requestPayload,hasAddress:'address' in requestPayload},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
       // #endregion
       await tasksApi.create(requestPayload)
+      showToast(t('toast.taskCreated'), 'success')
       router.push('/feed')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка создания задачи')
+      const errorMessage = err.response?.data?.message || 'Ошибка создания задачи'
+      setError(errorMessage)
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }

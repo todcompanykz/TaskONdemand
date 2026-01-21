@@ -53,10 +53,95 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const response = await authApi.login(email, password)
-    localStorage.setItem('token', response.accessToken)
-    localStorage.setItem('user', JSON.stringify(response.user))
-    setUser(response.user)
+    console.log('[AUTH] Login called', { email })
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'C',
+          location: 'AuthContext.tsx:login:entry',
+          message: 'login_function_called',
+          data: { email, hasPassword: !!password },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {})
+    } catch(e) {}
+    // #endregion
+
+    try {
+      console.log('[AUTH] Calling authApi.login')
+      const response = await authApi.login(email, password)
+      console.log('[AUTH] Login response received', { hasAccessToken: !!response.accessToken, hasUser: !!response.user })
+      
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+            location: 'AuthContext.tsx:login:response',
+            message: 'login_response_received',
+            data: { hasAccessToken: !!response.accessToken, hasUser: !!response.user, userId: response.user?.id },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {})
+      } catch(e) {}
+      // #endregion
+
+      localStorage.setItem('token', response.accessToken)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      setUser(response.user)
+      console.log('[AUTH] Token and user saved to localStorage')
+
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+            location: 'AuthContext.tsx:login:success',
+            message: 'login_success_storage_set',
+            data: { tokenSet: !!localStorage.getItem('token'), userSet: !!localStorage.getItem('user') },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {})
+      } catch(e) {}
+      // #endregion
+    } catch (error: any) {
+      console.error('[AUTH] Login error', error)
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+            location: 'AuthContext.tsx:login:error',
+            message: 'login_error',
+            data: { 
+              errorMessage: error?.message, 
+              errorResponse: error?.response?.data,
+              statusCode: error?.response?.status,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {})
+      } catch(e) {}
+      // #endregion
+      throw error
+    }
   }
 
   const register = async (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => {

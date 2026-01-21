@@ -3,6 +3,8 @@ import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { I18nProvider } from '@/contexts/I18nContext'
+import { ToastProvider } from '@/contexts/ToastContext'
+import ToastContainer from '@/components/ToastContainer'
 
 
 export const viewport: Viewport = {
@@ -32,9 +34,12 @@ export default function RootLayout({
       <body>
         <I18nProvider>
           <ThemeProvider>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
+            <ToastProvider>
+              <AuthProvider>
+                {children}
+                <ToastContainer />
+              </AuthProvider>
+            </ToastProvider>
           </ThemeProvider>
         </I18nProvider>
       </body>

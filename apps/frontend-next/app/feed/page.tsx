@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, Task } from '@/lib/api'
 import Navbar from '@/components/Navbar'
+import OnboardingModal from '@/components/OnboardingModal'
+import { useI18n } from '@/contexts/I18nContext'
 
 const urgencyColors = {
   low: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300',
@@ -22,15 +24,27 @@ const urgencyLabels = {
 export default function FeedPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const { t } = useI18n()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
+    console.log('[FEED] Auth check', { authLoading, user: !!user, userId: user?.id })
     if (!authLoading && !user) {
+      console.log('[FEED] No user, redirecting to login')
       router.push('/login')
       return
+    }
+
+    // Check onboarding status
+    if (!authLoading && user) {
+      const onboardingCompleted = localStorage.getItem('onboarding_completed')
+      if (!onboardingCompleted) {
+        setShowOnboarding(true)
+      }
     }
 
     // Get user location
@@ -91,6 +105,9 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
+      {showOnboarding && (
+        <OnboardingModal onComplete={() => setShowOnboarding(false)} />
+      )}
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -116,10 +133,23 @@ export default function FeedPage() {
             <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка задач...</p>
           </div>
         ) : tasks.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className="text-gray-600 dark:text-gray-400 text-lg">Нет доступных задач в радиусе 1 км</p>
-            <Link href="/tasks/create" className="btn-primary mt-6 inline-block">
-              Создать задачу
+          <div className="card text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-3">
+              {t('emptyStates.feed.title')}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
+              {t('emptyStates.feed.description')}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+              {t('emptyStates.feed.hint')}
+            </p>
+            <Link href="/tasks/create" className="btn-primary inline-block">
+              {t('emptyStates.feed.action')}
             </Link>
           </div>
         ) : (

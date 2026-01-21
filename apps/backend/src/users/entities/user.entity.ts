@@ -35,6 +35,9 @@ export class User {
   @Column({ type: 'int', default: 0 })
   ratingCount: number;
 
+  @Column({ type: 'boolean', default: false })
+  isRestricted: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -167,15 +167,70 @@
       }
     }
   },
-  "common": {
-    "taskOnDemand": "Task on Demand",
-    "loading": "Loading...",
-    "error": "Error",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "close": "Close",
-    "saving": "Saving..."
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to Task on Demand",
+      "content": "A platform for finding and completing local tasks in your area. Create tasks or find work near you."
+    },
+    "localTasks": {
+      "title": "Local Tasks",
+      "content": "Tasks are shown within 1 km of your location. This ensures you only see relevant tasks nearby."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "content": "Task address is hidden until you claim it. This protects the customer's privacy until confirmation."
+    },
+    "payment": {
+      "title": "Payment",
+      "content": "Payment happens outside the app. Customer and executor agree on payment method independently after task confirmation."
+    },
+    "rules": {
+      "title": "Important Rules",
+      "content": "Only one user can claim a task. Frequent cancellations (more than 3 per 24 hours) may lead to temporary blocking from claiming new tasks for 24 hours."
+    },
+    "skip": "Skip",
+    "next": "Next",
+    "previous": "Previous",
+    "getStarted": "Get Started"
+  },
+  "emptyStates": {
+    "feed": {
+      "title": "No tasks nearby",
+      "description": "There are no available tasks within 1 km of you.",
+      "action": "Create task",
+      "hint": "Check back later or create your first task"
+    },
+    "historyCreated": {
+      "title": "You haven't created any tasks yet",
+      "description": "Create your first task to start using the platform.",
+      "action": "Create task"
+    },
+    "historyClaimed": {
+      "title": "You haven't claimed any tasks yet",
+      "description": "Browse the task feed to find suitable work.",
+      "action": "Browse feed"
+    },
+    "reviews": {
+      "title": "No reviews yet",
+      "description": "Reviews will appear here after task completion."
+    }
+  },
+  "toast": {
+    "taskCreated": "Task created successfully",
+    "taskClaimed": "Task claimed successfully",
+    "taskCancelled": "Task cancelled",
+    "taskRefused": "Task refusal completed",
+    "workConfirmed": "Work completion confirmed",
+    "paymentConfirmed": "Payment receipt confirmed",
+    "taskCompleted": "Task completed",
+    "error": "An error occurred",
+    "blockedWarning": "Warning: You have 1 cancellation remaining before temporary blocking (24h)",
+    "blocked": "You are temporarily blocked from claiming tasks for 24 hours"
+  },
+  "microcopy": {
+    "cancelWarning": "Frequent cancellations may lead to temporary blocking (max 3 per 24h)",
+    "refuseWarning": "Frequent refusals may lead to temporary blocking (max 3 per 24h)",
+    "blockedBanner": "You are temporarily blocked from claiming tasks. This block will be lifted in 24 hours.",
+    "nearLimitWarning": "Warning: You have 1 cancellation remaining before temporary blocking (24h)"
   }
 }

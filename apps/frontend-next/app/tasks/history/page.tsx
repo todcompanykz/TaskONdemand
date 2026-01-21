@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, Task } from '@/lib/api'
 import Navbar from '@/components/Navbar'
+import { useI18n } from '@/contexts/I18nContext'
 
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
@@ -30,6 +31,7 @@ const statusLabels = {
 export default function HistoryPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const { t } = useI18n()
   const [history, setHistory] = useState<{ created: Task[]; claimed: Task[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -69,10 +71,10 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Мои задачи</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-8">Мои задачи</h1>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -82,12 +84,22 @@ export default function HistoryPage() {
 
         <div className="space-y-8">
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Созданные мной</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">Созданные мной</h2>
             {history?.created.length === 0 ? (
-              <div className="card text-center py-8">
-                <p className="text-gray-600">Вы еще не создали ни одной задачи</p>
-                <Link href="/tasks/create" className="btn-primary mt-4 inline-block">
-                  Создать задачу
+              <div className="card text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
+                  {t('emptyStates.historyCreated.title')}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {t('emptyStates.historyCreated.description')}
+                </p>
+                <Link href="/tasks/create" className="btn-primary inline-block">
+                  {t('emptyStates.historyCreated.action')}
                 </Link>
               </div>
             ) : (
@@ -130,12 +142,22 @@ export default function HistoryPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Взятые мной</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">Взятые мной</h2>
             {history?.claimed.length === 0 ? (
-              <div className="card text-center py-8">
-                <p className="text-gray-600">Вы еще не взяли ни одной задачи</p>
-                <Link href="/feed" className="btn-primary mt-4 inline-block">
-                  Посмотреть ленту
+              <div className="card text-center py-12">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                  <svg className="w-10 h-10 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2">
+                  {t('emptyStates.historyClaimed.title')}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {t('emptyStates.historyClaimed.description')}
+                </p>
+                <Link href="/feed" className="btn-primary inline-block">
+                  {t('emptyStates.historyClaimed.action')}
                 </Link>
               </div>
             ) : (

@@ -68,6 +68,10 @@ export interface User {
   createdAt?: string
   updatedAt?: string
   isAdmin?: boolean // Computed on frontend based on email
+  isRestricted?: boolean
+  cancelCount?: number
+  refuseCount?: number
+  suspiciousFlags?: string[]
 }
 
 export interface Review {
@@ -135,8 +139,71 @@ export const authApi = {
     return data
   },
   login: async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password })
-    return data
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'E',
+          location: 'api.ts:authApi.login:entry',
+          message: 'api_login_called',
+          data: { email, apiUrl: API_URL },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {})
+    } catch(e) {}
+    // #endregion
+
+    try {
+      const response = await api.post('/auth/login', { email, password })
+      
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+            location: 'api.ts:authApi.login:success',
+            message: 'api_login_success',
+            data: { hasData: !!response.data, hasAccessToken: !!response.data?.accessToken, hasUser: !!response.data?.user },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {})
+      } catch(e) {}
+      // #endregion
+
+      return response.data
+    } catch (error: any) {
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+            location: 'api.ts:authApi.login:error',
+            message: 'api_login_error',
+            data: { 
+              errorMessage: error?.message,
+              errorResponse: error?.response?.data,
+              statusCode: error?.response?.status,
+              statusText: error?.response?.statusText,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {})
+      } catch(e) {}
+      // #endregion
+      throw error
+    }
   },
 }
 
@@ -261,6 +328,15 @@ export const reviewsApi = {
   },
 }
 
+export interface AnalyticsData {
+  dailyMetrics: Array<{ date: string; created: number; claimed: number }>
+  overallMetrics: {
+    claimRatio: number
+    averageTimeToClaim: number
+    cancellationRate: number
+  }
+}
+
 export const adminApi = {
   getUsers: async () => {
     const { data } = await api.get('/admin/users')
@@ -274,8 +350,20 @@ export const adminApi = {
     const { data } = await api.get('/admin/stats')
     return data
   },
+  getAnalytics: async (): Promise<AnalyticsData> => {
+    const { data } = await api.get('/admin/analytics')
+    return data
+  },
   deleteTask: async (taskId: string) => {
     const { data } = await api.delete(`/admin/tasks/${taskId}`)
+    return data
+  },
+  restrictUser: async (userId: string) => {
+    const { data } = await api.post(`/admin/users/${userId}/restrict`)
+    return data
+  },
+  unrestrictUser: async (userId: string) => {
+    const { data } = await api.post(`/admin/users/${userId}/unrestrict`)
     return data
   },
 }

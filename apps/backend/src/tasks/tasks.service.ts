@@ -203,6 +203,23 @@ export class TasksService {
    * Atomic claim implementation using centralized state transition service
    */
   async claimTask(taskId: string, userId: string): Promise<Task> {
+    // Check if user is restricted
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (user?.isRestricted) {
+      this.logger.warn({
+        event: 'claim_blocked',
+        taskId,
+        userId,
+        reason: 'user_restricted',
+      });
+      throw new ForbiddenException(
+        'You are restricted from claiming tasks. Please contact support.',
+      );
+    }
+
     // Check if user is blocked (fast fail before transaction)
     const isBlocked = await this.rateLimitService.isBlocked(userId);
     if (isBlocked) {

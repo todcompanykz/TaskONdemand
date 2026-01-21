@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, reviewsApi, Task } from '@/lib/api'
 import Navbar from '@/components/Navbar'
 import StarRating from '@/components/StarRating'
+import { useToast } from '@/contexts/ToastContext'
+import { useI18n } from '@/contexts/I18nContext'
 
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
@@ -32,6 +34,8 @@ export default function TaskDetailsPage() {
   const router = useRouter()
   const params = useParams()
   const { user } = useAuth()
+  const { showToast } = useToast()
+  const { t } = useI18n()
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -40,6 +44,7 @@ export default function TaskDetailsPage() {
   const [reviewComment, setReviewComment] = useState('')
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -90,9 +95,17 @@ export default function TaskDetailsPage() {
     try {
       setActionLoading(true)
       await tasksApi.claim(task.id)
+      showToast(t('toast.taskClaimed'), 'success')
       await loadTask()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка при взятии задачи')
+      const errorMessage = err.response?.data?.message || 'Ошибка при взятии задачи'
+      setError(errorMessage)
+      if (errorMessage.includes('blocked') || errorMessage.includes('block')) {
+        setIsBlocked(true)
+        showToast(t('toast.blocked'), 'error')
+      } else {
+        showToast(errorMessage, 'error')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -104,9 +117,16 @@ export default function TaskDetailsPage() {
     try {
       setActionLoading(true)
       await tasksApi.cancel(task.id)
+      showToast(t('toast.taskCancelled'), 'success')
       await loadTask()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка при отмене')
+      const errorMessage = err.response?.data?.message || 'Ошибка при отмене'
+      setError(errorMessage)
+      if (errorMessage.includes('limit') || errorMessage.includes('block')) {
+        showToast(errorMessage, 'warning')
+      } else {
+        showToast(errorMessage, 'error')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -118,9 +138,16 @@ export default function TaskDetailsPage() {
     try {
       setActionLoading(true)
       await tasksApi.refuse(task.id)
+      showToast(t('toast.taskRefused'), 'success')
       await loadTask()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка при отказе')
+      const errorMessage = err.response?.data?.message || 'Ошибка при отказе'
+      setError(errorMessage)
+      if (errorMessage.includes('limit') || errorMessage.includes('block')) {
+        showToast(errorMessage, 'warning')
+      } else {
+        showToast(errorMessage, 'error')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -131,9 +158,12 @@ export default function TaskDetailsPage() {
     try {
       setActionLoading(true)
       await tasksApi.confirmWork(task.id)
+      showToast(t('toast.workConfirmed'), 'success')
       await loadTask()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка подтверждения')
+      const errorMessage = err.response?.data?.message || 'Ошибка подтверждения'
+      setError(errorMessage)
+      showToast(errorMessage, 'error')
     } finally {
       setActionLoading(false)
     }
@@ -144,9 +174,12 @@ export default function TaskDetailsPage() {
     try {
       setActionLoading(true)
       await tasksApi.confirmPayment(task.id)
+      showToast(t('toast.paymentConfirmed'), 'success')
       await loadTask()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Ошибка подтверждения')
+      const errorMessage = err.response?.data?.message || 'Ошибка подтверждения'
+      setError(errorMessage)
+      showToast(errorMessage, 'error')
     } finally {
       setActionLoading(false)
     }
@@ -332,13 +365,20 @@ export default function TaskDetailsPage() {
           )}
 
           {task.status === 'created' && !isCreator && (
-            <button
-              onClick={handleClaim}
-              disabled={actionLoading}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {actionLoading ? 'Обработка...' : 'Взять задачу'}
-            </button>
+            <div>
+              {isBlocked && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 text-blue-800 dark:text-blue-300 px-4 py-3 rounded-lg mb-4">
+                  <p className="text-sm font-medium">{t('microcopy.blockedBanner')}</p>
+                </div>
+              )}
+              <button
+                onClick={handleClaim}
+                disabled={actionLoading || isBlocked}
+                className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {actionLoading ? 'Обработка...' : 'Взять задачу'}
+              </button>
+            </div>
           )}
 
           {task.status === 'expired' && (
@@ -353,22 +393,38 @@ export default function TaskDetailsPage() {
           {task.status === 'claimed' && (
             <div className="space-y-3">
               {isCreator && (
-                <button
-                  onClick={handleCancel}
-                  disabled={actionLoading}
-                  className="btn-danger w-full"
-                >
-                  {actionLoading ? 'Обработка...' : 'Отменить задачу'}
-                </button>
+                <div>
+                  <button
+                    onClick={handleCancel}
+                    disabled={actionLoading}
+                    className="btn-danger w-full"
+                  >
+                    {actionLoading ? 'Обработка...' : 'Отменить задачу'}
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {t('microcopy.cancelWarning')}
+                  </p>
+                </div>
               )}
               {isClaimer && (
-                <button
-                  onClick={handleRefuse}
-                  disabled={actionLoading}
-                  className="btn-danger w-full"
-                >
-                  {actionLoading ? 'Обработка...' : 'Отказаться от задачи'}
-                </button>
+                <div>
+                  <button
+                    onClick={handleRefuse}
+                    disabled={actionLoading}
+                    className="btn-danger w-full"
+                  >
+                    {actionLoading ? 'Обработка...' : 'Отказаться от задачи'}
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {t('microcopy.refuseWarning')}
+                  </p>
+                </div>
               )}
 
               {task.status === 'claimed' && (

@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { User } from './entities/user.entity';
+import { UserNotificationSettings } from './entities/user-notification-settings.entity';
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
 
 @Injectable()
 export class UsersService {
