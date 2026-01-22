@@ -7,7 +7,7 @@ type Language = 'ru' | 'kk' | 'en'
 interface I18nContextType {
   language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string | number>) => string
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
@@ -73,8 +73,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     loadTranslations(lang).then(setTranslations)
   }
 
-  const t = (key: string): string => {
-    return getNestedValue(translations, key)
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let value = getNestedValue(translations, key)
+    // Simple interpolation: replace {key} with params[key]
+    if (params) {
+      Object.keys(params).forEach((paramKey) => {
+        const paramValue = String(params[paramKey])
+        value = value.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), paramValue)
+      })
+    }
+    return value
   }
 
   return (

@@ -134,18 +134,52 @@ export default function UserProfilePage() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-2">
                 {profile.firstName} {profile.lastName}
               </h1>
+              {/* Trust headline */}
+              {hasRating ? (
+                <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
+                  {t('user.trustHeadline')} · {ratingAvgNum.toFixed(1)} ⭐
+                </p>
+              ) : (
+                <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
+                  {t('user.newUser')}
+                </p>
+              )}
               <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
               {profile.phoneNumber && (
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
                   📱 {profile.phoneNumber}
                 </p>
               )}
+              {/* Trust badges */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {profile.completedTasksCount >= 10 && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 flex items-center gap-1">
+                    ✓ {t('user.badgeCompletedTasks').replace('{count}', String(profile.completedTasksCount))}
+                  </span>
+                )}
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-1">
+                  ✓ {t('user.badgeMemberSince').replace('{year}', String(new Date(profile.createdAt).getFullYear()))}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 pt-6 border-t border-gray-200 dark:border-slate-700">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Рейтинг</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Рейтинг</h3>
+                <div className="group relative">
+                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    {t('user.ratingTooltip')}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                      <div className="border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {hasRating ? (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
@@ -159,7 +193,7 @@ export default function UserProfilePage() {
                   </span>
                 </div>
               ) : (
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Нет оценок</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{t('user.noRatings')}</p>
               )}
             </div>
 

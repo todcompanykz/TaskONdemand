@@ -368,4 +368,53 @@ export const adminApi = {
   },
 }
 
+export interface CreateSupportRequestData {
+  topic: 'task_issue' | 'account_access' | 'restriction_block' | 'other'
+  message: string
+}
+
+export interface SupportRequest {
+  id: string
+  userId: string
+  user?: {
+    id: string
+    email: string
+    firstName?: string
+    lastName?: string
+  }
+  topic: string
+  message: string
+  createdAt: string
+}
+
+export const supportApi = {
+  createRequest: async (data: CreateSupportRequestData) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.createRequest:entry',message:'createRequest called',data:{topic:data.topic,messageLength:data.message.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    const { data: response } = await api.post('/support', data)
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.createRequest:success',message:'createRequest success',data:{response},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+    return response
+  },
+  getAllRequests: async (): Promise<SupportRequest[]> => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:entry',message:'getAllRequests called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
+    try {
+      const { data } = await api.get('/support')
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:success',message:'getAllRequests success',data:{dataLength:data?.length||0,data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      return data
+    } catch (err: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:error',message:'getAllRequests error',data:{error:err?.message,response:err?.response?.data,status:err?.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+      throw err
+    }
+  },
+}
+
 export default api

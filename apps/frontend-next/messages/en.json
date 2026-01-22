@@ -15,12 +15,12 @@
     "loginTitle": "Sign in",
     "loginButton": "Sign in",
     "loginLoading": "Signing in...",
-    "loginError": "Login error",
+    "loginError": "Invalid email or password. Please try again.",
     "register": "Register",
     "registerTitle": "Registration",
     "registerButton": "Register",
     "registerLoading": "Registering...",
-    "registerError": "Registration error",
+    "registerError": "Registration error. Please check your input.",
     "logout": "Logout",
     "email": "Email",
     "password": "Password",
@@ -55,6 +55,8 @@
     "address": "Address",
     "createdAt": "Created",
     "expiresAt": "Expires",
+    "expiresIn": "Expires in {hours}h {minutes}m",
+    "expiresSoon": "Expires in {minutes}m",
     "claim": "Claim task",
     "cancel": "Cancel task",
     "refuse": "Refuse task",
@@ -74,12 +76,26 @@
     "noTasks": "No tasks",
     "noTasksFound": "No tasks found"
   },
+  "taskHistory": {
+    "tabCreated": "Created by me",
+    "tabPerforming": "I'm performing"
+  },
   "status": {
-    "created": "Created",
-    "claimed": "Claimed",
-    "completed": "Completed",
+    "created": "Waiting for executor",
+    "claimed": "In progress",
+    "completed": "Completed successfully",
     "cancelled": "Cancelled",
     "expired": "Expired"
+  },
+  "timeline": {
+    "created": "Created",
+    "createdHelper": "Waiting for executor",
+    "claimed": "Claimed",
+    "claimedHelper": "Executor assigned",
+    "inProgress": "In progress",
+    "inProgressHelper": "Work in progress",
+    "completed": "Completed",
+    "completedHelper": "Work completed"
   },
   "urgency": {
     "low": "Low",
@@ -94,7 +110,12 @@
     "reviews": "Reviews",
     "noReviews": "No reviews yet",
     "editProfile": "Edit profile",
-    "editProfileNotImplemented": "Edit profile (MVP: not implemented)"
+    "editProfileNotImplemented": "Edit profile (MVP: not implemented)",
+    "trustHeadline": "Reliable executor",
+    "newUser": "New user",
+    "badgeCompletedTasks": "{count}+ completed tasks",
+    "badgeMemberSince": "Member since {year}",
+    "ratingTooltip": "Rating is calculated only after completed tasks"
   },
   "review": {
     "leaveReview": "Leave review",
@@ -117,6 +138,7 @@
   "profile": {
     "publicProfile": "Public profile",
     "account": "Account",
+    "support": "Support",
     "appearance": "Appearance",
     "accessibility": "Accessibility",
     "notifications": "Notifications"
@@ -216,13 +238,13 @@
     }
   },
   "toast": {
-    "taskCreated": "Task created successfully",
-    "taskClaimed": "Task claimed successfully",
-    "taskCancelled": "Task cancelled",
-    "taskRefused": "Task refusal completed",
-    "workConfirmed": "Work completion confirmed",
-    "paymentConfirmed": "Payment receipt confirmed",
-    "taskCompleted": "Task completed",
+    "taskCreated": "Task created successfully!",
+    "taskClaimed": "Task claimed successfully! Contact the customer.",
+    "taskCancelled": "Task cancelled. You can create a new one.",
+    "taskRefused": "You have successfully refused the task.",
+    "workConfirmed": "Work completion confirmed.",
+    "paymentConfirmed": "Payment receipt confirmed.",
+    "taskCompleted": "Task completed successfully!",
     "error": "An error occurred",
     "blockedWarning": "Warning: You have 1 cancellation remaining before temporary blocking (24h)",
     "blocked": "You are temporarily blocked from claiming tasks for 24 hours"
@@ -232,5 +254,90 @@
     "refuseWarning": "Frequent refusals may lead to temporary blocking (max 3 per 24h)",
     "blockedBanner": "You are temporarily blocked from claiming tasks. This block will be lifted in 24 hours.",
     "nearLimitWarning": "Warning: You have 1 cancellation remaining before temporary blocking (24h)"
+  },
+  "hints": {
+    "zeroTasks": "Most users start by creating a simple task nearby",
+    "unclaimedTasks": "Tasks with higher reward are usually taken faster",
+    "dismiss": "Dismiss"
+  },
+  "notifications": {
+    "userRestricted": {
+      "title": "Your account is restricted",
+      "message": "An administrator has restricted your account. You cannot claim new tasks. Please contact support."
+    },
+    "userUnrestricted": {
+      "title": "Restriction removed",
+      "message": "The restriction on your account has been removed. You can now claim tasks."
+    },
+    "userBlocked": {
+      "title": "Temporary block",
+      "message": "You are temporarily blocked from claiming tasks for 24 hours due to frequent cancellations/refusals."
+    },
+    "claimBlocked": {
+      "title": "Cannot claim task",
+      "message": "You cannot claim this task. Your account is restricted or temporarily blocked."
+    },
+    "taskClaimed": {
+      "title": "Task claimed",
+      "message": "Your task \"{taskTitle}\" has been claimed by an executor.",
+      "action": "Open task"
+    },
+    "taskCancelled": {
+      "title": "Task cancelled",
+      "message": "Task \"{taskTitle}\" was cancelled by {by}.",
+      "action": "Open task"
+    },
+    "taskCompleted": {
+      "title": "Task completed",
+      "message": "Task \"{taskTitle}\" has been completed successfully.",
+      "action": "Open task"
+    },
+    "taskExpired": {
+      "title": "Task expired",
+      "message": "Task \"{taskTitle}\" has expired.",
+      "action": "Open task"
+    }
+  },
+  "notificationHistory": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "emptyDescription": "Your notifications will appear here",
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear all",
+    "justNow": "Just now",
+    "minutesAgo": "{count} minutes ago",
+    "hoursAgo": "{count} hours ago",
+    "daysAgo": "{count} days ago",
+    "yesterday": "Yesterday",
+    "titles": {
+      "userRestricted": "Account restricted",
+      "userUnrestricted": "Restriction removed",
+      "userBlocked": "Temporary block",
+      "claimBlocked": "Cannot claim task",
+      "taskClaimed": "Task claimed",
+      "taskCancelled": "Task cancelled",
+      "taskCompleted": "Task completed",
+      "taskExpired": "Task expired"
+    }
+  },
+  "support": {
+    "title": "Contact Support",
+    "description": "Describe your issue and we'll help you as soon as possible.",
+    "topic": "Topic",
+    "topicPlaceholder": "Select a topic",
+    "topics": {
+      "taskIssue": "Task issue",
+      "accountAccess": "Account / Access",
+      "restrictionBlock": "Restriction / Block",
+      "other": "Other"
+    },
+    "message": "Message",
+    "messagePlaceholder": "Describe your issue in detail...",
+    "messageRequired": "Please describe your issue",
+    "messageMinLength": "Message must be at least 10 characters long",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "success": "Message sent. We'll respond soon.",
+    "error": "Error sending message. Please try again later."
   }
 }

@@ -8,6 +8,7 @@ import { useI18n } from '@/contexts/I18nContext'
 import ThemeToggle from '@/components/ThemeToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import UserDropdownMenu from '@/components/UserDropdownMenu'
+import NotificationBell from '@/components/NotificationBell'
 
 
 export default function Navbar() {
@@ -62,7 +63,12 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {user && <UserDropdownMenu />}
+            {user && (
+              <>
+                <NotificationBell />
+                <UserDropdownMenu />
+              </>
+            )}
             {/* Language Switcher */}
             <LanguageSwitcher />
             {/* Theme Toggle Switch */}

@@ -9,6 +9,9 @@ import Navbar from '@/components/Navbar'
 import StarRating from '@/components/StarRating'
 import { useToast } from '@/contexts/ToastContext'
 import { useI18n } from '@/contexts/I18nContext'
+import TaskStatusTimeline from '@/components/TaskStatusTimeline'
+import TaskCountdown from '@/components/TaskCountdown'
+import { useNotificationService } from '@/hooks/useNotificationService'
 
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
@@ -36,6 +39,7 @@ export default function TaskDetailsPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { t } = useI18n()
+  const { checkTaskEvents, checkUserRestrictions } = useNotificationService()
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -97,12 +101,16 @@ export default function TaskDetailsPage() {
       await tasksApi.claim(task.id)
       showToast(t('toast.taskClaimed'), 'success')
       await loadTask()
+      // Check for notifications after successful claim
+      checkTaskEvents()
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ошибка при взятии задачи'
       setError(errorMessage)
-      if (errorMessage.includes('blocked') || errorMessage.includes('block')) {
+      if (errorMessage.includes('blocked') || errorMessage.includes('block') || errorMessage.includes('restricted')) {
         setIsBlocked(true)
-        showToast(t('toast.blocked'), 'error')
+        showToast(t('notifications.claimBlocked.message'), 'error', 10000, undefined, true)
+        // Check user restrictions when claim is blocked
+        checkUserRestrictions()
       } else {
         showToast(errorMessage, 'error')
       }
@@ -119,6 +127,8 @@ export default function TaskDetailsPage() {
       await tasksApi.cancel(task.id)
       showToast(t('toast.taskCancelled'), 'success')
       await loadTask()
+      // Check for notifications after cancel
+      checkTaskEvents()
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ошибка при отмене'
       setError(errorMessage)
@@ -140,6 +150,8 @@ export default function TaskDetailsPage() {
       await tasksApi.refuse(task.id)
       showToast(t('toast.taskRefused'), 'success')
       await loadTask()
+      // Check for notifications after refuse
+      checkTaskEvents()
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ошибка при отказе'
       setError(errorMessage)
@@ -160,6 +172,8 @@ export default function TaskDetailsPage() {
       await tasksApi.confirmWork(task.id)
       showToast(t('toast.workConfirmed'), 'success')
       await loadTask()
+      // Check for notifications after work confirmation
+      checkTaskEvents()
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ошибка подтверждения'
       setError(errorMessage)
@@ -176,6 +190,8 @@ export default function TaskDetailsPage() {
       await tasksApi.confirmPayment(task.id)
       showToast(t('toast.paymentConfirmed'), 'success')
       await loadTask()
+      // Check for notifications after payment confirmation
+      checkTaskEvents()
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Ошибка подтверждения'
       setError(errorMessage)
@@ -312,6 +328,8 @@ export default function TaskDetailsPage() {
             </div>
           </div>
 
+          <TaskStatusTimeline task={task} />
+
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">Описание</h2>
             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{task.fullDescription}</p>
@@ -334,13 +352,14 @@ export default function TaskDetailsPage() {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Создана</p>
               <p className="text-gray-700 dark:text-gray-300">{new Date(task.createdAt).toLocaleString('ru-RU')}</p>
-              {task.expiresAt && task.status === 'created' && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  Истекает: {new Date(task.expiresAt).toLocaleString('ru-RU')}
-                </p>
-              )}
             </div>
           </div>
+
+          {task.expiresAt && task.status === 'created' && (
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800/50 rounded-lg">
+              <TaskCountdown expiresAt={task.expiresAt} status={task.status} />
+            </div>
+          )}
 
           {canSeePhone && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -382,10 +401,10 @@ export default function TaskDetailsPage() {
           )}
 
           {task.status === 'expired' && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <p className="text-orange-800 font-medium">⚠️ Задача истекла</p>
-              <p className="text-sm text-orange-700 mt-1">
-                Эта задача была создана более 24 часов назад и автоматически истекла.
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg p-4">
+              <p className="text-orange-800 dark:text-orange-300 font-medium">⚠️ {t('task.expiredMessage')}</p>
+              <p className="text-sm text-orange-700 dark:text-orange-400 mt-1">
+                {t('task.expiredDescription')}
               </p>
             </div>
           )}

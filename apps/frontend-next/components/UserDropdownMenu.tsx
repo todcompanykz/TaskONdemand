@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import ThemeToggle from '@/components/ThemeToggle'
+import SupportModal from '@/components/SupportModal'
 
 export default function UserDropdownMenu() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isSupportOpen, setIsSupportOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { user, logout } = useAuth()
@@ -202,6 +204,33 @@ export default function UserDropdownMenu() {
               <span>{t('profile.account')}</span>
             </button>
 
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsSupportOpen(true)
+                setIsOpen(false)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors relative group focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
+            >
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4/5 bg-primary rounded-r opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity"></span>
+              <svg
+                className="w-4 h-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+              <span>{t('profile.support')}</span>
+            </button>
+
             <div className="border-t border-gray-200 dark:border-slate-700 my-1"></div>
 
             <div className="px-4 py-2.5">
@@ -298,6 +327,7 @@ export default function UserDropdownMenu() {
           </div>
         </div>
       )}
+      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
     </div>
   )
 }

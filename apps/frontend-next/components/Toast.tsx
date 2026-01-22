@@ -40,13 +40,14 @@ const toastIcons = {
 
 export default function Toast({ toast, onRemove }: ToastProps) {
   useEffect(() => {
-    if (toast.duration && toast.duration > 0) {
+    // Don't auto-dismiss persistent toasts
+    if (!toast.persistent && toast.duration && toast.duration > 0) {
       const timer = setTimeout(() => {
         onRemove(toast.id)
       }, toast.duration)
       return () => clearTimeout(timer)
     }
-  }, [toast.duration, toast.id, onRemove])
+  }, [toast.duration, toast.id, toast.persistent, onRemove])
 
   return (
     <div
@@ -62,6 +63,17 @@ export default function Toast({ toast, onRemove }: ToastProps) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{toast.message}</p>
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick()
+              onRemove(toast.id)
+            }}
+            className="mt-2 text-sm font-semibold underline hover:no-underline"
+          >
+            {toast.action.label}
+          </button>
+        )}
       </div>
       <button
         onClick={() => onRemove(toast.id)}

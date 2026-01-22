@@ -4,7 +4,9 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { I18nProvider } from '@/contexts/I18nContext'
 import { ToastProvider } from '@/contexts/ToastContext'
+import { NotificationHistoryProvider } from '@/contexts/NotificationHistoryContext'
 import ToastContainer from '@/components/ToastContainer'
+import NotificationChecker from '@/components/NotificationChecker'
 
 
 export const viewport: Viewport = {
@@ -36,8 +38,11 @@ export default function RootLayout({
           <ThemeProvider>
             <ToastProvider>
               <AuthProvider>
-                {children}
-                <ToastContainer />
+                <NotificationHistoryProvider>
+                  {children}
+                  <NotificationChecker />
+                  <ToastContainer />
+                </NotificationHistoryProvider>
               </AuthProvider>
             </ToastProvider>
           </ThemeProvider>

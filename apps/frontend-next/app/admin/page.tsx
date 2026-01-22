@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { adminApi, Task, User, AnalyticsData } from '@/lib/api'
+import { adminApi, Task, User, AnalyticsData, supportApi, SupportRequest } from '@/lib/api'
 import Navbar from '@/components/Navbar'
 
 enum TaskStatus {
@@ -21,9 +21,14 @@ export default function AdminPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<any>(null)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'stats' | 'analytics' | 'users' | 'tasks'>('stats')
+  const [activeTab, setActiveTab] = useState<'stats' | 'analytics' | 'users' | 'tasks' | 'support'>('stats')
+  const [sortField, setSortField] = useState<'email' | 'cancelCount' | 'refuseCount' | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [filterRestricted, setFilterRestricted] = useState(false)
+  const [filterSuspicious, setFilterSuspicious] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -42,17 +47,28 @@ export default function AdminPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [usersData, tasksData, statsData, analyticsData] = await Promise.all([
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:loadData:entry',message:'loadData called',data:{userId:user?.id,isAdmin},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
+      const [usersData, tasksData, statsData, analyticsData, supportData] = await Promise.all([
         adminApi.getUsers(),
         adminApi.getTasks(),
         adminApi.getStats(),
         adminApi.getAnalytics(),
+        supportApi.getAllRequests(),
       ])
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:loadData:after-api',message:'API calls completed',data:{supportDataLength:supportData?.length||0,supportData:supportData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       setUsers(usersData)
       setTasks(tasksData)
       setStats(statsData)
       setAnalytics(analyticsData)
+      setSupportRequests(supportData)
     } catch (err: any) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:loadData:error',message:'loadData error',data:{error:err?.message,response:err?.response?.data,status:err?.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       setError(err.response?.data?.message || 'Ошибка загрузки данных')
     } finally {
       setLoading(false)
@@ -157,6 +173,21 @@ export default function AdminPage() {
             >
               Задачи ({tasks.length})
             </button>
+            <button
+              onClick={() => setActiveTab('support')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'support'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Поддержка
+              {supportRequests.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs bg-primary text-white rounded-full">
+                  {supportRequests.length}
+                </span>
+              )}
+            </button>
           </nav>
         </div>
 
@@ -249,74 +280,199 @@ export default function AdminPage() {
 
         {activeTab === 'users' && (
           <div className="card">
+            {/* Filters */}
+            <div className="mb-4 flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFilterRestricted(!filterRestricted)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  filterRestricted
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Ограниченные
+              </button>
+              <button
+                onClick={() => setFilterSuspicious(!filterSuspicious)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  filterSuspicious
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Подозрительные
+              </button>
+              {(filterRestricted || filterSuspicious) && (
+                <button
+                  onClick={() => {
+                    setFilterRestricted(false)
+                    setFilterSuspicious(false)
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700"
+                >
+                  Сбросить фильтры
+                </button>
+              )}
+            </div>
+
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                 <thead className="bg-gray-50 dark:bg-slate-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
+                      onClick={() => {
+                        if (sortField === 'email') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortField('email')
+                          setSortDirection('asc')
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        Email
+                        {sortField === 'email' && (
+                          <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Телефон</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Отмены</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Отказы</th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
+                      onClick={() => {
+                        if (sortField === 'cancelCount') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortField('cancelCount')
+                          setSortDirection('asc')
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        Отмены
+                        {sortField === 'cancelCount' && (
+                          <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
+                      onClick={() => {
+                        if (sortField === 'refuseCount') {
+                          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+                        } else {
+                          setSortField('refuseCount')
+                          setSortDirection('asc')
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-1">
+                        Отказы
+                        {sortField === 'refuseCount' && (
+                          <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Статус</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Флаги</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Действия</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-700">
-                  {users.map((user) => (
-                    <tr 
-                      key={user.id}
-                      className={user.suspiciousFlags && user.suspiciousFlags.length > 0 ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{user.phoneNumber || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.cancelCount || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.refuseCount || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {user.isRestricted ? (
-                          <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full">
-                            Ограничен
-                          </span>
-                        ) : (
-                          <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
-                            Активен
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-wrap gap-1">
-                          {user.suspiciousFlags?.map((flag) => (
-                            <span
-                              key={flag}
-                              className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded"
-                            >
-                              {flag === 'high_cancel_rate' && 'Высокий % отмен'}
-                              {flag === 'high_refuse_rate' && 'Высокий % отказов'}
-                              {flag === 'restricted' && 'Ограничен'}
-                              {flag === 'low_claim_ratio' && 'Низкий % взятий'}
+                  {(() => {
+                    let filteredUsers = [...users]
+
+                    // Apply filters
+                    if (filterRestricted) {
+                      filteredUsers = filteredUsers.filter((u) => u.isRestricted)
+                    }
+                    if (filterSuspicious) {
+                      filteredUsers = filteredUsers.filter(
+                        (u) => u.suspiciousFlags && u.suspiciousFlags.length > 0
+                      )
+                    }
+
+                    // Apply sorting
+                    if (sortField) {
+                      filteredUsers.sort((a, b) => {
+                        let aVal: any = a[sortField as keyof User]
+                        let bVal: any = b[sortField as keyof User]
+                        if (sortField === 'email') {
+                          aVal = aVal || ''
+                          bVal = bVal || ''
+                        } else {
+                          aVal = aVal || 0
+                          bVal = bVal || 0
+                        }
+                        if (sortDirection === 'asc') {
+                          return aVal > bVal ? 1 : aVal < bVal ? -1 : 0
+                        } else {
+                          return aVal < bVal ? 1 : aVal > bVal ? -1 : 0
+                        }
+                      })
+                    }
+
+                    return filteredUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className={`${
+                          user.suspiciousFlags && user.suspiciousFlags.length > 0
+                            ? 'bg-yellow-50 dark:bg-yellow-900/20'
+                            : ''
+                        } hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors`}
+                        onClick={() => (window.location.href = `/users/${user.id}`)}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{user.phoneNumber || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.cancelCount || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.refuseCount || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {user.isRestricted ? (
+                            <span className="px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-full">
+                              Ограничен
                             </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {user.isRestricted ? (
-                          <button
-                            onClick={() => handleUnrestrictUser(user.id)}
-                            className="btn-outline text-sm"
-                          >
-                            Снять ограничение
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleRestrictUser(user.id)}
-                            className="btn-danger text-sm"
-                          >
-                            Ограничить
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                          ) : (
+                            <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full">
+                              Активен
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-wrap gap-1">
+                            {user.suspiciousFlags?.map((flag) => (
+                              <span
+                                key={flag}
+                                className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded"
+                              >
+                                {flag === 'high_cancel_rate' && 'Высокий % отмен'}
+                                {flag === 'high_refuse_rate' && 'Высокий % отказов'}
+                                {flag === 'restricted' && 'Ограничен'}
+                                {flag === 'low_claim_ratio' && 'Низкий % взятий'}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
+                          {user.isRestricted ? (
+                            <button
+                              onClick={() => handleUnrestrictUser(user.id)}
+                              className="btn-outline text-sm"
+                            >
+                              Снять ограничение
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRestrictUser(user.id)}
+                              className="btn-danger text-sm"
+                            >
+                              Ограничить
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -379,6 +535,59 @@ export default function AdminPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {activeTab === 'support' && (
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
+              Сообщения поддержки ({supportRequests.length})
+            </h2>
+            {supportRequests.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">Нет сообщений поддержки</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {supportRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                            {request.topic === 'task_issue' && 'Проблема с задачей'}
+                            {request.topic === 'account_access' && 'Аккаунт / Доступ'}
+                            {request.topic === 'restriction_block' && 'Ограничение / Блокировка'}
+                            {request.topic === 'other' && 'Другое'}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(request.createdAt).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        <div className="mb-2">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                            От: {request.user?.email || 'Неизвестный пользователь'}
+                          </p>
+                          {request.user?.firstName || request.user?.lastName ? (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {[request.user?.firstName, request.user?.lastName].filter(Boolean).join(' ')}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        {request.message}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

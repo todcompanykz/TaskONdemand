@@ -35,6 +35,7 @@ export default function HistoryPage() {
   const [history, setHistory] = useState<{ created: Task[]; claimed: Task[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState<'created' | 'performing'>('created')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -82,9 +83,33 @@ export default function HistoryPage() {
           </div>
         )}
 
-        <div className="space-y-8">
+        <div className="mb-6 border-b border-gray-200 dark:border-slate-700">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('created')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'created'
+                  ? 'border-primary text-primary dark:text-primary-light'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              {t('taskHistory.tabCreated')}
+            </button>
+            <button
+              onClick={() => setActiveTab('performing')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'performing'
+                  ? 'border-primary text-primary dark:text-primary-light'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              {t('taskHistory.tabPerforming')}
+            </button>
+          </nav>
+        </div>
+
+        {activeTab === 'created' && (
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">Созданные мной</h2>
             {history?.created.length === 0 ? (
               <div className="card text-center py-12">
                 <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
@@ -140,9 +165,10 @@ export default function HistoryPage() {
               </div>
             )}
           </section>
+        )}
 
+        {activeTab === 'performing' && (
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">Взятые мной</h2>
             {history?.claimed.length === 0 ? (
               <div className="card text-center py-12">
                 <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
@@ -198,7 +224,7 @@ export default function HistoryPage() {
               </div>
             )}
           </section>
-        </div>
+        )}
       </div>
     </div>
   )
