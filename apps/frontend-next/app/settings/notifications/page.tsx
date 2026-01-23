@@ -388,7 +388,7 @@ export default function NotificationSettingsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between py-3">
+              <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-slate-700">
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-gray-50">
                     {t('settings.notifications.work.executorAssigned')}
@@ -400,6 +400,20 @@ export default function NotificationSettingsPage() {
                 <ToggleSwitch
                   checked={settings.executorAssigned}
                   onChange={(checked) => handleToggle('executorAssigned', checked)}
+                />
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-gray-50">
+                    {t('settings.notifications.work.supportReplies')}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {t('settings.notifications.work.supportRepliesDesc')}
+                  </p>
+                </div>
+                <ToggleSwitch
+                  checked={settings.supportReplies}
+                  onChange={(checked) => handleToggle('supportReplies', checked)}
                 />
               </div>
             </div>

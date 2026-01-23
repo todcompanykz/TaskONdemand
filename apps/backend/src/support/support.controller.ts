@@ -33,4 +33,9 @@ export class SupportController {
     // #endregion
     return result;
   }
+
+  @Get('my-requests')
+  async getMySupportRequests(@Request() req) {
+    return this.supportService.getUserSupportRequests(req.user.id);
+  }
 }

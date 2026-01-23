@@ -118,7 +118,12 @@ label[data-theme-toggle="true"] .theme-toggle-container {
   font-size: 30px; /* overridden by StarRating sizePx */
 }
 
+/* Select all labels after checked input in DOM (which appear before in visual order due to row-reverse) */
 .rating input:checked ~ label,
+.rating input:checked ~ span label,
+.rating input:checked ~ span ~ span label,
+.rating input:checked ~ span ~ span ~ span label,
+.rating input:checked ~ span ~ span ~ span ~ span label,
 .rating label:hover,
 .rating label:hover ~ label {
   color: #ffd700;

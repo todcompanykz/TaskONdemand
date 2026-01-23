@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { useNotificationHistory } from '@/contexts/NotificationHistoryContext'
-import { usersApi, tasksApi, NotificationSettings, Task, User } from '@/lib/api'
+import { usersApi, tasksApi, supportApi, NotificationSettings, Task, User, SupportRequest } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
 export type NotificationType =
@@ -17,6 +17,9 @@ export type NotificationType =
   | 'task_cancelled'
   | 'task_completed'
   | 'task_expired'
+  | 'support_reply'
+  | 'work_confirmed'
+  | 'payment_confirmed'
 
 interface NotificationService {
   checkUserRestrictions: () => Promise<void>
@@ -62,7 +65,11 @@ export function useNotificationService(): NotificationService {
         case 'task_cancelled':
         case 'task_completed':
         case 'task_expired':
+        case 'work_confirmed':
+        case 'payment_confirmed':
           return settings.taskStatusChange
+        case 'support_reply':
+          return settings.supportReplies ?? true
         default:
           return true
       }
@@ -315,16 +322,93 @@ export function useNotificationService(): NotificationService {
     addNotification,
   ])
 
+  const checkSupportReplies = useCallback(async () => {
+    if (!user?.id) return
+
+    try {
+      const settings = await getNotificationSettings()
+      if (!shouldShowNotification('support_reply', settings)) {
+        return
+      }
+
+      const requests = await supportApi.getMySupportRequests()
+      const storedRequestsKey = `support_requests_${user.id}`
+      const storedRequests = JSON.parse(
+        localStorage.getItem(storedRequestsKey) || '{}',
+      ) as Record<string, { answeredAt: string | null }>
+
+      for (const request of requests) {
+        if (request.status === 'answered' && request.answeredAt) {
+          const stored = storedRequests[request.id]
+          const storedAnsweredAt = stored?.answeredAt || null
+          const currentAnsweredAt = request.answeredAt
+
+          if (storedAnsweredAt !== currentAnsweredAt) {
+            const notificationId = `support_reply_${request.id}`
+            if (!isNotificationShown('support_reply', request.id)) {
+              const message = t('notifications.supportReply.message', {
+                message: request.responseMessage || '',
+              })
+              addNotification({
+                id: notificationId,
+                type: 'support_reply',
+                title: t('notificationHistory.titles.supportReply'),
+                message,
+                timestamp: Date.now(),
+              })
+              showToast(message, 'info', 10000, {
+                label: t('notifications.supportReply.action'),
+                onClick: () => {
+                  // Could navigate to support history if we add that page
+                },
+              })
+              markNotificationShown('support_reply', request.id)
+            }
+
+            // Update stored answeredAt
+            storedRequests[request.id] = { answeredAt: currentAnsweredAt }
+          } else if (!stored) {
+            // First time seeing this request, store it
+            storedRequests[request.id] = { answeredAt: currentAnsweredAt }
+          }
+        } else {
+          // Request is open, store it without answeredAt
+          if (!storedRequests[request.id]) {
+            storedRequests[request.id] = { answeredAt: null }
+          }
+        }
+      }
+
+      // Save updated stored requests
+      localStorage.setItem(storedRequestsKey, JSON.stringify(storedRequests))
+    } catch (error) {
+      console.error('Failed to check support replies:', error)
+    }
+  }, [
+    user?.id,
+    showToast,
+    t,
+    shouldShowNotification,
+    isNotificationShown,
+    markNotificationShown,
+    getNotificationSettings,
+    addNotification,
+  ])
+
   const checkAll = useCallback(async () => {
     if (checkingRef.current) return
     checkingRef.current = true
 
     try {
-      await Promise.all([checkUserRestrictions(), checkTaskEvents()])
+      await Promise.all([
+        checkUserRestrictions(),
+        checkTaskEvents(),
+        checkSupportReplies(),
+      ])
     } finally {
       checkingRef.current = false
     }
-  }, [checkUserRestrictions, checkTaskEvents])
+  }, [checkUserRestrictions, checkTaskEvents, checkSupportReplies])
 
   return {
     checkUserRestrictions,

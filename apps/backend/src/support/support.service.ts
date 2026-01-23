@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSupportRequestDto } from './dto/create-support-request.dto';
+import { ReplySupportRequestDto } from './dto/reply-support-request.dto';
 import { SupportRequest } from './entities/support-request.entity';
 
 @Injectable()
@@ -54,7 +55,7 @@ export class SupportService {
     fs.appendFileSync(logPath, logEntry);
     // #endregion
     const requests = await this.supportRequestRepository.find({
-      relations: ['user'],
+      relations: ['user', 'respondedByAdmin'],
       order: { createdAt: 'DESC' },
     });
     // #region agent log
@@ -62,5 +63,51 @@ export class SupportService {
     fs.appendFileSync(logPath, logEntry2);
     // #endregion
     return requests;
+  }
+
+  async getUserSupportRequests(userId: string) {
+    return this.supportRequestRepository.find({
+      where: { userId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async replyToSupportRequest(
+    requestId: string,
+    adminId: string,
+    dto: ReplySupportRequestDto,
+  ): Promise<SupportRequest> {
+    const request = await this.supportRequestRepository.findOne({
+      where: { id: requestId },
+      relations: ['user'],
+    });
+
+    if (!request) {
+      throw new NotFoundException('Support request not found');
+    }
+
+    if (request.status !== 'open') {
+      throw new BadRequestException('Support request has already been answered');
+    }
+
+    request.status = 'answered';
+    request.responseMessage = dto.message;
+    request.answeredAt = new Date();
+    request.respondedByAdminId = adminId;
+
+    const saved = await this.supportRequestRepository.save(request);
+
+    this.logger.log({
+      event: 'support_request_replied',
+      requestId: saved.id,
+      adminId,
+      userId: saved.userId,
+    });
+
+    return this.supportRequestRepository.findOne({
+      where: { id: saved.id },
+      relations: ['user', 'respondedByAdmin'],
+    });
   }
 }

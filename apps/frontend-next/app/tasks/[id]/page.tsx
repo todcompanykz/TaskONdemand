@@ -12,6 +12,8 @@ import { useI18n } from '@/contexts/I18nContext'
 import TaskStatusTimeline from '@/components/TaskStatusTimeline'
 import TaskCountdown from '@/components/TaskCountdown'
 import { useNotificationService } from '@/hooks/useNotificationService'
+import { useNotificationHistory } from '@/contexts/NotificationHistoryContext'
+import { usersApi } from '@/lib/api'
 
 const urgencyColors = {
   low: 'bg-gray-100 text-gray-700',
@@ -39,12 +41,31 @@ export default function TaskDetailsPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { t } = useI18n()
-  const { checkTaskEvents, checkUserRestrictions } = useNotificationService()
+  const { checkTaskEvents, checkUserRestrictions, shouldShowNotification } = useNotificationService()
+  const { addNotification } = useNotificationHistory()
   const [task, setTask] = useState<Task | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reviewRating, setReviewRating] = useState<number>(0)
+  
+  // #region agent log
+  const logReviewRatingChange = (newValue: number) => {
+    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'H4',
+        location: 'apps/frontend-next/app/tasks/[id]/page.tsx:setReviewRating',
+        message: 'reviewRating state updated',
+        data: { newValue, taskId: task?.id },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {})
+  }
+  // #endregion
   const [reviewComment, setReviewComment] = useState('')
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
@@ -172,6 +193,30 @@ export default function TaskDetailsPage() {
       await tasksApi.confirmWork(task.id)
       showToast(t('toast.workConfirmed'), 'success')
       await loadTask()
+      
+      // Create immediate notification for executor
+      if (task.claimedById) {
+        try {
+          const settings = await usersApi.getNotificationSettings()
+          if (shouldShowNotification('work_confirmed', settings)) {
+            const message = t('notifications.workConfirmed.message', {
+              taskTitle: task.shortDescription || t('task.create'),
+            })
+            addNotification({
+              id: `work_confirmed_${task.id}_${Date.now()}`,
+              type: 'work_confirmed',
+              title: t('notificationHistory.titles.workConfirmed'),
+              message,
+              timestamp: Date.now(),
+              taskId: task.id,
+              actionUrl: `/tasks/${task.id}`,
+            })
+          }
+        } catch (err) {
+          console.error('Failed to create work confirmed notification:', err)
+        }
+      }
+      
       // Check for notifications after work confirmation
       checkTaskEvents()
     } catch (err: any) {
@@ -190,6 +235,30 @@ export default function TaskDetailsPage() {
       await tasksApi.confirmPayment(task.id)
       showToast(t('toast.paymentConfirmed'), 'success')
       await loadTask()
+      
+      // Create immediate notification for creator
+      if (task.createdById) {
+        try {
+          const settings = await usersApi.getNotificationSettings()
+          if (shouldShowNotification('payment_confirmed', settings)) {
+            const message = t('notifications.paymentConfirmed.message', {
+              taskTitle: task.shortDescription || t('task.create'),
+            })
+            addNotification({
+              id: `payment_confirmed_${task.id}_${Date.now()}`,
+              type: 'payment_confirmed',
+              title: t('notificationHistory.titles.paymentConfirmed'),
+              message,
+              timestamp: Date.now(),
+              taskId: task.id,
+              actionUrl: `/tasks/${task.id}`,
+            })
+          }
+        } catch (err) {
+          console.error('Failed to create payment confirmed notification:', err)
+        }
+      }
+      
       // Check for notifications after payment confirmation
       checkTaskEvents()
     } catch (err: any) {
@@ -328,7 +397,10 @@ export default function TaskDetailsPage() {
             </div>
           </div>
 
-          <TaskStatusTimeline task={task} />
+          <TaskStatusTimeline 
+            task={task} 
+            userRole={isCreator ? 'creator' : isClaimer ? 'executor' : null}
+          />
 
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">Описание</h2>
@@ -499,7 +571,28 @@ export default function TaskDetailsPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Оценка *
                 </label>
-                <StarRating value={reviewRating} onChange={setReviewRating} />
+                <StarRating 
+                  value={reviewRating} 
+                  onChange={(newValue) => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        sessionId: 'debug-session',
+                        runId: 'run1',
+                        hypothesisId: 'H5',
+                        location: 'apps/frontend-next/app/tasks/[id]/page.tsx:StarRating onChange',
+                        message: 'StarRating onChange callback',
+                        data: { newValue, currentReviewRating: reviewRating },
+                        timestamp: Date.now(),
+                      }),
+                    }).catch(() => {})
+                    // #endregion
+                    logReviewRatingChange(newValue)
+                    setReviewRating(newValue)
+                  }} 
+                />
               </div>
 
               <div className="mb-4">

@@ -26,6 +26,22 @@ export class SupportRequest {
   @Column({ type: 'text' })
   message: string;
 
+  @Column({ type: 'varchar', length: 20, default: 'open' })
+  status: 'open' | 'answered';
+
+  @Column({ type: 'text', nullable: true })
+  responseMessage: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  answeredAt: Date | null;
+
+  @Column({ type: 'uuid', nullable: true })
+  respondedByAdminId: string | null;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'respondedByAdminId' })
+  respondedByAdmin: User | null;
+
   @CreateDateColumn()
   createdAt: Date;
 }

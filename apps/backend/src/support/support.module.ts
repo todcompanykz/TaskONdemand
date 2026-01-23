@@ -8,6 +8,6 @@ import { SupportRequest } from './entities/support-request.entity';
   imports: [TypeOrmModule.forFeature([SupportRequest])],
   controllers: [SupportController],
   providers: [SupportService],
-  exports: [SupportService],
+  exports: [SupportService, TypeOrmModule],
 })
 export class SupportModule {}

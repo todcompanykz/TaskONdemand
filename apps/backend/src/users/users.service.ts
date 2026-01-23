@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { User } from './entities/user.entity';
@@ -61,6 +61,17 @@ export class UsersService {
     // Note: A task can be both created and claimed by same user, but in MVP we'll sum them
     const completedTasksCount = completedTasksAsCreator + completedTasksAsExecutor;
 
+    // Count recent cancellations (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentCancellationsCount = await this.tasksRepository.count({
+      where: {
+        status: TaskStatus.CANCELLED,
+        createdById: userId,
+        updatedAt: MoreThanOrEqual(thirtyDaysAgo),
+      },
+    });
+
     const profile = {
       id: user.id,
       firstName: user.firstName,
@@ -70,6 +81,7 @@ export class UsersService {
       ratingAvg: user.ratingAvg,
       ratingCount: user.ratingCount,
       completedTasksCount,
+      recentCancellationsCount,
       createdAt: user.createdAt,
     };
 

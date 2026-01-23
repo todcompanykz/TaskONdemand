@@ -31,13 +31,11 @@ export default function FeedPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [selectedCity, setSelectedCity] = useState<string>('Астана')
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
-    console.log('[FEED] Auth check', { authLoading, user: !!user, userId: user?.id })
     if (!authLoading && !user) {
-      console.log('[FEED] No user, redirecting to login')
       router.push('/login')
       return
     }
@@ -50,40 +48,27 @@ export default function FeedPage() {
       }
     }
 
-    // Get user location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
-        },
-        (err) => {
-          setError('Не удалось получить ваше местоположение. Пожалуйста, разрешите доступ к геолокации.')
-          // Default to Astana center
-          setLocation({ lat: 51.1694, lng: 71.4304 })
-        }
-      )
-    } else {
-      // Default to Astana center
-      setLocation({ lat: 51.1694, lng: 71.4304 })
+    // Load selected city from localStorage or default to 'Астана'
+    const savedCity = localStorage.getItem('selected_city')
+    if (savedCity) {
+      setSelectedCity(savedCity)
     }
   }, [authLoading, user, router])
 
   useEffect(() => {
-    if (location) {
+    if (user) {
       loadTasks()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location])
+  }, [selectedCity, user])
 
   const loadTasks = async () => {
-    if (!location) return
+    if (!user) return
 
     try {
       setLoading(true)
-      const data = await tasksApi.getFeed(location.lng, location.lat)
+      setError('')
+      const data = await tasksApi.getFeed(selectedCity)
       setTasks(data)
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка загрузки задач')
@@ -92,7 +77,12 @@ export default function FeedPage() {
     }
   }
 
-  if (authLoading || !location) {
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city)
+    localStorage.setItem('selected_city', city)
+  }
+
+  if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
         <Navbar />
@@ -114,13 +104,24 @@ export default function FeedPage() {
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Астана</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+              {t('feed.title', { city: selectedCity })}
+            </h1>
+            <select
+              value={selectedCity}
+              onChange={(e) => handleCityChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              <option value="Астана">Астана</option>
+            </select>
+          </div>
           <button
             onClick={loadTasks}
             className="btn-outline text-sm"
             disabled={loading}
           >
-            {loading ? 'Обновление...' : 'Обновить'}
+            {loading ? t('common.loading') : t('feed.refresh')}
           </button>
         </div>
 

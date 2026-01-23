@@ -60,6 +60,9 @@ export class UserNotificationSettings {
   @Column({ type: 'boolean', default: true })
   executorAssigned: boolean; // Назначение исполнителя
 
+  @Column({ type: 'boolean', default: true })
+  supportReplies: boolean; // Ответы от поддержки
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -51,4 +51,8 @@ export class UpdateNotificationSettingsDto {
   @IsOptional()
   @IsBoolean()
   executorAssigned?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  supportReplies?: boolean;
 }

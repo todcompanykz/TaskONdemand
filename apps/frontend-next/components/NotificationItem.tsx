@@ -10,6 +10,18 @@ interface NotificationItemProps {
 }
 
 const getNotificationIcon = (type: NotificationItemType['type']) => {
+  if (type === 'support_reply') {
+    return (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+        />
+      </svg>
+    )
+  }
   switch (type) {
     case 'user_restricted':
     case 'user_blocked':
@@ -69,6 +81,27 @@ const getNotificationIcon = (type: NotificationItemType['type']) => {
           />
         </svg>
       )
+    case 'work_confirmed':
+      return (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )
+    case 'payment_confirmed':
+      return (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+          <path
+            fillRule="evenodd"
+            d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+            clipRule="evenodd"
+          />
+        </svg>
+      )
     default:
       return (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -94,6 +127,8 @@ const getNotificationColor = (type: NotificationItemType['type'], read: boolean)
       return 'text-yellow-600 dark:text-yellow-400'
     case 'user_unrestricted':
     case 'task_completed':
+    case 'work_confirmed':
+    case 'payment_confirmed':
       return 'text-green-600 dark:text-green-400'
     case 'task_cancelled':
       return 'text-red-600 dark:text-red-400'
@@ -101,6 +136,8 @@ const getNotificationColor = (type: NotificationItemType['type'], read: boolean)
       return 'text-blue-600 dark:text-blue-400'
     case 'task_expired':
       return 'text-gray-600 dark:text-gray-400'
+    case 'support_reply':
+      return 'text-blue-600 dark:text-blue-400'
     default:
       return 'text-gray-600 dark:text-gray-400'
   }

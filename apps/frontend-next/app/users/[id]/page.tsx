@@ -87,6 +87,17 @@ export default function UserProfilePage() {
     ? parseFloat(profile.ratingAvg) 
     : Number(profile.ratingAvg) || 0
 
+  // Determine headline based on rating
+  const getHeadline = () => {
+    if (ratingAvgNum >= 4.0 && profile.ratingCount >= 3) {
+      return t('user.trustHeadlineReliable')
+    } else if (hasRating) {
+      return t('user.trustHeadlineActive')
+    } else {
+      return t('user.newUser')
+    }
+  }
+
   // Render star rating component
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating)
@@ -137,11 +148,11 @@ export default function UserProfilePage() {
               {/* Trust headline */}
               {hasRating ? (
                 <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
-                  {t('user.trustHeadline')} · {ratingAvgNum.toFixed(1)} ⭐
+                  {getHeadline()} · {ratingAvgNum.toFixed(1)} ⭐
                 </p>
               ) : (
                 <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
-                  {t('user.newUser')}
+                  {getHeadline()}
                 </p>
               )}
               <p className="text-gray-600 dark:text-gray-400">{profile.email}</p>
@@ -160,6 +171,11 @@ export default function UserProfilePage() {
                 <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex items-center gap-1">
                   ✓ {t('user.badgeMemberSince').replace('{year}', String(new Date(profile.createdAt).getFullYear()))}
                 </span>
+                {profile.recentCancellationsCount === 0 && profile.completedTasksCount > 0 && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 flex items-center gap-1">
+                    ✓ {t('user.badgeNoRecentCancellations')}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -172,8 +188,8 @@ export default function UserProfilePage() {
                   <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                    {t('user.ratingTooltip')}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg py-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    {t('user.ratingTooltipDetailed')}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
                       <div className="border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
                     </div>

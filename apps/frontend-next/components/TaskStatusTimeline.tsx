@@ -7,6 +7,7 @@ import { useI18n } from '@/contexts/I18nContext'
 
 interface TaskStatusTimelineProps {
   task: Task
+  userRole?: 'creator' | 'executor' | null
 }
 
 type TimelineStep = {
@@ -16,33 +17,58 @@ type TimelineStep = {
   status: 'completed' | 'current' | 'future'
 }
 
-export default function TaskStatusTimeline({ task }: TaskStatusTimelineProps) {
+export default function TaskStatusTimeline({ task, userRole }: TaskStatusTimelineProps) {
   const { t } = useI18n()
 
   const getSteps = (): TimelineStep[] => {
+    // Determine helper text keys based on user role
+    const createdHelperKey = userRole === 'creator' 
+      ? 'timeline.createdHelperCreator' 
+      : userRole === 'executor'
+      ? 'timeline.createdHelperExecutor'
+      : 'timeline.createdHelper'
+    
+    const claimedHelperKey = userRole === 'creator'
+      ? 'timeline.claimedHelperCreator'
+      : userRole === 'executor'
+      ? 'timeline.claimedHelperExecutor'
+      : 'timeline.claimedHelper'
+    
+    const inProgressHelperKey = userRole === 'creator'
+      ? 'timeline.inProgressHelperCreator'
+      : userRole === 'executor'
+      ? 'timeline.inProgressHelperExecutor'
+      : 'timeline.inProgressHelper'
+    
+    const completedHelperKey = userRole === 'creator'
+      ? 'timeline.completedHelperCreator'
+      : userRole === 'executor'
+      ? 'timeline.completedHelperExecutor'
+      : 'timeline.completedHelper'
+
     const steps: TimelineStep[] = [
       {
         id: 'created',
         labelKey: 'timeline.created',
-        helperTextKey: 'timeline.createdHelper',
+        helperTextKey: createdHelperKey,
         status: 'future',
       },
       {
         id: 'claimed',
         labelKey: 'timeline.claimed',
-        helperTextKey: 'timeline.claimedHelper',
+        helperTextKey: claimedHelperKey,
         status: 'future',
       },
       {
         id: 'in-progress',
         labelKey: 'timeline.inProgress',
-        helperTextKey: 'timeline.inProgressHelper',
+        helperTextKey: inProgressHelperKey,
         status: 'future',
       },
       {
         id: 'completed',
         labelKey: 'timeline.completed',
-        helperTextKey: 'timeline.completedHelper',
+        helperTextKey: completedHelperKey,
         status: 'future',
       },
     ]

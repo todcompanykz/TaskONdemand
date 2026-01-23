@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminApi, Task, User, AnalyticsData, supportApi, SupportRequest } from '@/lib/api'
 import Navbar from '@/components/Navbar'
+import { useI18n } from '@/contexts/I18nContext'
 
 enum TaskStatus {
   CREATED = 'created',
@@ -17,11 +19,15 @@ enum TaskStatus {
 export default function AdminPage() {
   const router = useRouter()
   const { user, loading: authLoading, isAdmin } = useAuth()
+  const { t } = useI18n()
   const [users, setUsers] = useState<User[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
   const [stats, setStats] = useState<any>(null)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([])
+  const [selectedRequest, setSelectedRequest] = useState<SupportRequest | null>(null)
+  const [replyMessage, setReplyMessage] = useState('')
+  const [replying, setReplying] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'stats' | 'analytics' | 'users' | 'tasks' | 'support'>('stats')
@@ -102,6 +108,25 @@ export default function AdminPage() {
       await loadData()
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка снятия ограничения')
+    }
+  }
+
+  const handleReplyToSupport = async () => {
+    if (!selectedRequest || !replyMessage.trim() || replyMessage.trim().length < 10) {
+      setError('Сообщение должно содержать минимум 10 символов')
+      return
+    }
+
+    try {
+      setReplying(true)
+      await adminApi.replyToSupportRequest(selectedRequest.id, replyMessage.trim())
+      setReplyMessage('')
+      setSelectedRequest(null)
+      await loadData()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка при отправке ответа')
+    } finally {
+      setReplying(false)
     }
   }
 
@@ -283,36 +308,38 @@ export default function AdminPage() {
             {/* Filters */}
             <div className="mb-4 flex gap-2 flex-wrap">
               <button
-                onClick={() => setFilterRestricted(!filterRestricted)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filterRestricted
+                onClick={() => {
+                  setFilterRestricted(false)
+                  setFilterSuspicious(false)
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  !filterRestricted && !filterSuspicious
                     ? 'bg-primary text-white'
                     : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                 }`}
               >
-                Ограниченные
+                {t('admin.filters.all')}
+              </button>
+              <button
+                onClick={() => setFilterRestricted(!filterRestricted)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filterRestricted
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                    : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                🔒 {t('admin.filters.restricted')}
               </button>
               <button
                 onClick={() => setFilterSuspicious(!filterSuspicious)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   filterSuspicious
-                    ? 'bg-primary text-white'
+                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                     : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                 }`}
               >
-                Подозрительные
+                ⚠️ {t('admin.filters.suspicious')}
               </button>
-              {(filterRestricted || filterSuspicious) && (
-                <button
-                  onClick={() => {
-                    setFilterRestricted(false)
-                    setFilterSuspicious(false)
-                  }}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700"
-                >
-                  Сбросить фильтры
-                </button>
-              )}
             </div>
 
             <div className="overflow-x-auto">
@@ -417,13 +444,23 @@ export default function AdminPage() {
                       <tr
                         key={user.id}
                         className={`${
-                          user.suspiciousFlags && user.suspiciousFlags.length > 0
+                          user.isRestricted
+                            ? 'bg-red-50 dark:bg-red-900/20'
+                            : user.suspiciousFlags && user.suspiciousFlags.length > 0
                             ? 'bg-yellow-50 dark:bg-yellow-900/20'
                             : ''
                         } hover:bg-gray-50 dark:hover:bg-slate-800 cursor-pointer transition-colors`}
                         onClick={() => (window.location.href = `/users/${user.id}`)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
+                          <div className="flex items-center gap-2">
+                            {user.isRestricted && <span className="text-red-600 dark:text-red-400">🔒</span>}
+                            {user.suspiciousFlags && user.suspiciousFlags.length > 0 && !user.isRestricted && (
+                              <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+                            )}
+                            {user.email}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{user.phoneNumber || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.cancelCount || 0}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">{user.refuseCount || 0}</td>
@@ -443,8 +480,12 @@ export default function AdminPage() {
                             {user.suspiciousFlags?.map((flag) => (
                               <span
                                 key={flag}
-                                className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded"
+                                className="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded flex items-center gap-1"
                               >
+                                {flag === 'high_cancel_rate' && <span>⚠️</span>}
+                                {flag === 'high_refuse_rate' && <span>❌</span>}
+                                {flag === 'restricted' && <span>🔒</span>}
+                                {flag === 'low_claim_ratio' && <span>📉</span>}
                                 {flag === 'high_cancel_rate' && 'Высокий % отмен'}
                                 {flag === 'high_refuse_rate' && 'Высокий % отказов'}
                                 {flag === 'restricted' && 'Ограничен'}
@@ -454,21 +495,29 @@ export default function AdminPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm" onClick={(e) => e.stopPropagation()}>
-                          {user.isRestricted ? (
+                          <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleUnrestrictUser(user.id)}
+                              onClick={() => (window.location.href = `/users/${user.id}`)}
                               className="btn-outline text-sm"
                             >
-                              Снять ограничение
+                              {t('admin.actions.viewProfile')}
                             </button>
-                          ) : (
-                            <button
-                              onClick={() => handleRestrictUser(user.id)}
-                              className="btn-danger text-sm"
-                            >
-                              Ограничить
-                            </button>
-                          )}
+                            {user.isRestricted ? (
+                              <button
+                                onClick={() => handleUnrestrictUser(user.id)}
+                                className="btn-outline text-sm"
+                              >
+                                Снять ограничение
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRestrictUser(user.id)}
+                                className="btn-danger text-sm"
+                              >
+                                Ограничить
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -494,11 +543,17 @@ export default function AdminPage() {
                       <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">
                         {task.status}
                       </span>
+                      <Link
+                        href={`/tasks/${task.id}`}
+                        className="btn-outline text-sm"
+                      >
+                        {t('admin.actions.viewTask')}
+                      </Link>
                       <button
                         onClick={() => handleDeleteTask(task.id)}
                         className="btn-danger text-sm"
                       >
-                        Удалить
+                        {t('admin.deleteTask')}
                       </button>
                     </div>
                   </div>
@@ -539,53 +594,167 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'support' && (
-          <div className="card">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
-              Сообщения поддержки ({supportRequests.length})
-            </h2>
-            {supportRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">Нет сообщений поддержки</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {supportRequests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                            {request.topic === 'task_issue' && 'Проблема с задачей'}
-                            {request.topic === 'account_access' && 'Аккаунт / Доступ'}
-                            {request.topic === 'restriction_block' && 'Ограничение / Блокировка'}
-                            {request.topic === 'other' && 'Другое'}
-                          </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="space-y-4">
+            <div className="card">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
+                Сообщения поддержки ({supportRequests.length})
+              </h2>
+              {supportRequests.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400">Нет сообщений поддержки</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                    <thead className="bg-gray-50 dark:bg-slate-800">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Пользователь
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Тема
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Создано
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                          Статус
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-slate-900 divide-y divide-gray-200 dark:divide-slate-700">
+                      {supportRequests.map((request) => (
+                        <tr
+                          key={request.id}
+                          onClick={() => setSelectedRequest(request)}
+                          className="cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                                {request.user?.email || 'Неизвестный пользователь'}
+                              </p>
+                              {(request.user?.firstName || request.user?.lastName) && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {[request.user?.firstName, request.user?.lastName].filter(Boolean).join(' ')}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                              {request.topic === 'task_issue' && 'Проблема с задачей'}
+                              {request.topic === 'account_access' && 'Аккаунт / Доступ'}
+                              {request.topic === 'restriction_block' && 'Ограничение / Блокировка'}
+                              {request.topic === 'other' && 'Другое'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(request.createdAt).toLocaleString('ru-RU')}
-                          </span>
-                        </div>
-                        <div className="mb-2">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                            От: {request.user?.email || 'Неизвестный пользователь'}
-                          </p>
-                          {request.user?.firstName || request.user?.lastName ? (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {[request.user?.firstName, request.user?.lastName].filter(Boolean).join(' ')}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                request.status === 'answered'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                  : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                              }`}
+                            >
+                              {request.status === 'answered' ? 'Отвечено' : 'Открыто'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {selectedRequest && (
+              <div className="card">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                    Обращение от {selectedRequest.user?.email || 'Неизвестного пользователя'}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setSelectedRequest(null)
+                      setReplyMessage('')
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Тема: {selectedRequest.topic === 'task_issue' && 'Проблема с задачей'}
+                    {selectedRequest.topic === 'account_access' && 'Аккаунт / Доступ'}
+                    {selectedRequest.topic === 'restriction_block' && 'Ограничение / Блокировка'}
+                    {selectedRequest.topic === 'other' && 'Другое'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Создано: {new Date(selectedRequest.createdAt).toLocaleString('ru-RU')}
+                  </p>
+                  <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                      {selectedRequest.message}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedRequest.status === 'answered' && selectedRequest.responseMessage ? (
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Ответ поддержки:
+                    </p>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                       <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                        {request.message}
+                        {selectedRequest.responseMessage}
                       </p>
+                      {selectedRequest.answeredAt && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          Отвечено: {new Date(selectedRequest.answeredAt).toLocaleString('ru-RU')}
+                        </p>
+                      )}
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div>
+                    <label htmlFor="reply-message" className="label">
+                      Ответ от имени поддержки
+                    </label>
+                    <textarea
+                      id="reply-message"
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      placeholder="Введите ответ пользователю..."
+                      rows={5}
+                      className="input resize-none mb-4"
+                      disabled={replying}
+                    />
+                    {replyMessage.trim().length > 0 && replyMessage.trim().length < 10 && (
+                      <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                        Сообщение должно содержать минимум 10 символов
+                      </p>
+                    )}
+                    <button
+                      onClick={handleReplyToSupport}
+                      disabled={replying || replyMessage.trim().length < 10}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {replying ? 'Отправка...' : 'Ответить от имени поддержки'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

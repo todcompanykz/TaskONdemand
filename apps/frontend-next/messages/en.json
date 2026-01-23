@@ -42,6 +42,11 @@
     "myTasks": "My tasks",
     "admin": "Admin"
   },
+  "feed": {
+    "title": "Tasks in {city}",
+    "refresh": "Refresh",
+    "helperText": "We show all active tasks in your city"
+  },
   "task": {
     "create": "Create task",
     "createTitle": "Create task",
@@ -90,12 +95,20 @@
   "timeline": {
     "created": "Created",
     "createdHelper": "Waiting for executor",
+    "createdHelperCreator": "Waiting for executor",
+    "createdHelperExecutor": "Task available to claim",
     "claimed": "Claimed",
     "claimedHelper": "Executor assigned",
+    "claimedHelperCreator": "Executor assigned",
+    "claimedHelperExecutor": "You claimed the task",
     "inProgress": "In progress",
     "inProgressHelper": "Work in progress",
+    "inProgressHelperCreator": "Waiting for work confirmation",
+    "inProgressHelperExecutor": "Work in progress",
     "completed": "Completed",
-    "completedHelper": "Work completed"
+    "completedHelper": "Work completed",
+    "completedHelperCreator": "Task completed",
+    "completedHelperExecutor": "Task completed"
   },
   "urgency": {
     "low": "Low",
@@ -112,10 +125,14 @@
     "editProfile": "Edit profile",
     "editProfileNotImplemented": "Edit profile (MVP: not implemented)",
     "trustHeadline": "Reliable executor",
+    "trustHeadlineReliable": "Reliable executor",
+    "trustHeadlineActive": "Active executor",
     "newUser": "New user",
     "badgeCompletedTasks": "{count}+ completed tasks",
     "badgeMemberSince": "Member since {year}",
-    "ratingTooltip": "Rating is calculated only after completed tasks"
+    "badgeNoRecentCancellations": "No recent cancellations",
+    "ratingTooltip": "Rating is calculated only after completed tasks",
+    "ratingTooltipDetailed": "Rating is calculated based on reviews after completed tasks. Average value of all ratings from 1 to 5."
   },
   "review": {
     "leaveReview": "Leave review",
@@ -133,7 +150,16 @@
     "users": "Users",
     "tasks": "Tasks",
     "stats": "Statistics",
-    "deleteTask": "Delete"
+    "deleteTask": "Delete",
+    "filters": {
+      "all": "All",
+      "restricted": "Restricted",
+      "suspicious": "Suspicious"
+    },
+    "actions": {
+      "viewProfile": "Profile",
+      "viewTask": "Task"
+    }
   },
   "profile": {
     "publicProfile": "Public profile",
@@ -185,7 +211,9 @@
         "taskComments": "Replies or comments",
         "taskCommentsDesc": "Notifications about task comments",
         "executorAssigned": "Executor assigned",
-        "executorAssignedDesc": "Notifications about executor assignment to tasks"
+        "executorAssignedDesc": "Notifications about executor assignment to tasks",
+        "supportReplies": "Support replies",
+        "supportRepliesDesc": "Notifications about replies to your support requests"
       }
     }
   },
@@ -195,8 +223,8 @@
       "content": "A platform for finding and completing local tasks in your area. Create tasks or find work near you."
     },
     "localTasks": {
-      "title": "Local Tasks",
-      "content": "Tasks are shown within 1 km of your location. This ensures you only see relevant tasks nearby."
+      "title": "Tasks by City",
+      "content": "Tasks are shown by selected city. You can choose a city to see all active tasks in it."
     },
     "privacy": {
       "title": "Privacy",
@@ -217,8 +245,8 @@
   },
   "emptyStates": {
     "feed": {
-      "title": "No tasks nearby",
-      "description": "There are no available tasks within 1 km of you.",
+      "title": "No tasks in this city",
+      "description": "There are no active tasks in the selected city.",
       "action": "Create task",
       "hint": "Check back later or create your first task"
     },
@@ -256,7 +284,7 @@
     "nearLimitWarning": "Warning: You have 1 cancellation remaining before temporary blocking (24h)"
   },
   "hints": {
-    "zeroTasks": "Most users start by creating a simple task nearby",
+    "zeroTasks": "Most users start by creating a simple task",
     "unclaimedTasks": "Tasks with higher reward are usually taken faster",
     "dismiss": "Dismiss"
   },
@@ -296,6 +324,16 @@
       "title": "Task expired",
       "message": "Task \"{taskTitle}\" has expired.",
       "action": "Open task"
+    },
+    "workConfirmed": {
+      "title": "Work confirmed",
+      "message": "Customer confirmed work completion for task \"{taskTitle}\".",
+      "action": "Open task"
+    },
+    "paymentConfirmed": {
+      "title": "Payment confirmed",
+      "message": "Executor confirmed payment receipt for task \"{taskTitle}\".",
+      "action": "Open task"
     }
   },
   "notificationHistory": {
@@ -317,7 +355,10 @@
       "taskClaimed": "Task claimed",
       "taskCancelled": "Task cancelled",
       "taskCompleted": "Task completed",
-      "taskExpired": "Task expired"
+      "taskExpired": "Task expired",
+      "supportReply": "Support reply",
+      "workConfirmed": "Work confirmed",
+      "paymentConfirmed": "Payment confirmed"
     }
   },
   "support": {

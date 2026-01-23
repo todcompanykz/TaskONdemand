@@ -90,12 +90,20 @@
   "timeline": {
     "created": "Создана",
     "createdHelper": "Ожидание исполнителя",
+    "createdHelperCreator": "Ожидание исполнителя",
+    "createdHelperExecutor": "Задача доступна для взятия",
     "claimed": "Взята",
     "claimedHelper": "Исполнитель назначен",
+    "claimedHelperCreator": "Исполнитель назначен",
+    "claimedHelperExecutor": "Вы взяли задачу",
     "inProgress": "В работе",
     "inProgressHelper": "Выполнение работы",
+    "inProgressHelperCreator": "Ожидание подтверждения работы",
+    "inProgressHelperExecutor": "Выполнение работы",
     "completed": "Завершена",
-    "completedHelper": "Работа выполнена"
+    "completedHelper": "Работа выполнена",
+    "completedHelperCreator": "Задача завершена",
+    "completedHelperExecutor": "Задача завершена"
   },
   "urgency": {
     "low": "Низкая",
@@ -112,10 +120,14 @@
     "editProfile": "Редактировать профиль",
     "editProfileNotImplemented": "Редактировать профиль (MVP: не реализовано)",
     "trustHeadline": "Надёжный исполнитель",
+    "trustHeadlineReliable": "Надёжный исполнитель",
+    "trustHeadlineActive": "Активный исполнитель",
     "newUser": "Новый пользователь",
     "badgeCompletedTasks": "{count}+ выполненных задач",
     "badgeMemberSince": "На платформе с {year}",
-    "ratingTooltip": "Рейтинг рассчитывается только после выполненных задач"
+    "badgeNoRecentCancellations": "Без недавних отмен",
+    "ratingTooltip": "Рейтинг рассчитывается только после выполненных задач",
+    "ratingTooltipDetailed": "Рейтинг рассчитывается на основе отзывов после завершённых задач. Среднее значение всех оценок от 1 до 5."
   },
   "review": {
     "leaveReview": "Оставить отзыв",
@@ -133,7 +145,16 @@
     "users": "Пользователи",
     "tasks": "Задачи",
     "stats": "Статистика",
-    "deleteTask": "Удалить"
+    "deleteTask": "Удалить",
+    "filters": {
+      "all": "Все",
+      "restricted": "Ограниченные",
+      "suspicious": "Подозрительные"
+    },
+    "actions": {
+      "viewProfile": "Профиль",
+      "viewTask": "Задача"
+    }
   },
   "profile": {
     "publicProfile": "Публичный профиль",
@@ -185,7 +206,9 @@
         "taskComments": "Ответы или комментарии",
         "taskCommentsDesc": "Уведомления о комментариях к задачам",
         "executorAssigned": "Назначение исполнителя",
-        "executorAssignedDesc": "Уведомления о назначении исполнителя на задачу"
+        "executorAssignedDesc": "Уведомления о назначении исполнителя на задачу",
+        "supportReplies": "Ответы от поддержки",
+        "supportRepliesDesc": "Уведомления об ответах на ваши обращения в поддержку"
       }
     }
   },
@@ -217,8 +240,8 @@
   },
   "emptyStates": {
     "feed": {
-      "title": "Нет задач поблизости",
-      "description": "В радиусе 1 км от вас пока нет доступных задач.",
+      "title": "Нет задач в этом городе",
+      "description": "Пока нет активных задач в выбранном городе.",
       "action": "Создать задачу",
       "hint": "Проверьте позже или создайте свою первую задачу"
     },
@@ -256,7 +279,7 @@
     "nearLimitWarning": "Внимание: у вас осталась 1 отмена до временной блокировки (24ч)"
   },
   "hints": {
-    "zeroTasks": "Большинство пользователей начинают с создания простой задачи поблизости",
+    "zeroTasks": "Большинство пользователей начинают с создания простой задачи",
     "unclaimedTasks": "Задачи с более высоким вознаграждением обычно берутся быстрее",
     "dismiss": "Скрыть"
   },
@@ -296,6 +319,16 @@
       "title": "Задача истекла",
       "message": "Задача \"{taskTitle}\" истекла по времени.",
       "action": "Открыть задачу"
+    },
+    "workConfirmed": {
+      "title": "Работа подтверждена",
+      "message": "Заказчик подтвердил выполнение работы по задаче \"{taskTitle}\".",
+      "action": "Открыть задачу"
+    },
+    "paymentConfirmed": {
+      "title": "Оплата подтверждена",
+      "message": "Исполнитель подтвердил получение оплаты по задаче \"{taskTitle}\".",
+      "action": "Открыть задачу"
     }
   },
   "notificationHistory": {
@@ -317,7 +350,17 @@
       "taskClaimed": "Задача взята",
       "taskCancelled": "Задача отменена",
       "taskCompleted": "Задача завершена",
-      "taskExpired": "Задача истекла"
+      "taskExpired": "Задача истекла",
+      "supportReply": "Ответ от поддержки",
+      "workConfirmed": "Работа подтверждена",
+      "paymentConfirmed": "Оплата подтверждена"
+    }
+  },
+  "notifications": {
+    "supportReply": {
+      "title": "Ответ от поддержки",
+      "message": "Поддержка ответила на ваше обращение: {message}",
+      "action": "Открыть"
     }
   },
   "support": {

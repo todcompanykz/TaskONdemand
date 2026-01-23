@@ -1,12 +1,17 @@
-import { Controller, Get, Post, Delete, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Request } from '@nestjs/common';
 import { AdminService } from './admin.service';
+import { SupportService } from '../support/support.service';
+import { ReplySupportRequestDto } from '../support/dto/reply-support-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly supportService: SupportService,
+  ) {}
 
   @Get('users')
   async getUsers() {
@@ -41,5 +46,14 @@ export class AdminController {
   @Post('users/:id/unrestrict')
   async unrestrictUser(@Param('id') id: string, @Request() req) {
     return this.adminService.unrestrictUser(id, req.user.id);
+  }
+
+  @Post('support/:id/reply')
+  async replyToSupportRequest(
+    @Param('id') id: string,
+    @Request() req,
+    @Body() dto: ReplySupportRequestDto,
+  ) {
+    return this.supportService.replyToSupportRequest(id, req.user.id, dto);
   }
 }

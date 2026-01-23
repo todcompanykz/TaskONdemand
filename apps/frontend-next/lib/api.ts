@@ -99,6 +99,7 @@ export interface UserProfile {
   ratingAvg: number
   ratingCount: number
   completedTasksCount: number
+  recentCancellationsCount?: number
   createdAt: string
   reviews: Review[]
 }
@@ -208,9 +209,9 @@ export const authApi = {
 }
 
 export const tasksApi = {
-  getFeed: async (longitude: number, latitude: number) => {
+  getFeed: async (city: string) => {
     const { data } = await api.get('/tasks/feed', {
-      params: { longitude, latitude },
+      params: { city },
     })
     return data
   },
@@ -275,6 +276,7 @@ export interface NotificationSettings {
   taskStatusChange: boolean
   taskComments: boolean
   executorAssigned: boolean
+  supportReplies: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -292,6 +294,7 @@ export interface UpdateNotificationSettingsData {
   taskStatusChange?: boolean
   taskComments?: boolean
   executorAssigned?: boolean
+  supportReplies?: boolean
 }
 
 export const usersApi = {
@@ -366,6 +369,10 @@ export const adminApi = {
     const { data } = await api.post(`/admin/users/${userId}/unrestrict`)
     return data
   },
+  replyToSupportRequest: async (requestId: string, message: string) => {
+    const { data } = await api.post(`/admin/support/${requestId}/reply`, { message })
+    return data
+  },
 }
 
 export interface CreateSupportRequestData {
@@ -384,6 +391,10 @@ export interface SupportRequest {
   }
   topic: string
   message: string
+  status: 'open' | 'answered'
+  responseMessage?: string | null
+  answeredAt?: string | null
+  respondedByAdminId?: string | null
   createdAt: string
 }
 
@@ -414,6 +425,10 @@ export const supportApi = {
       // #endregion
       throw err
     }
+  },
+  getMySupportRequests: async (): Promise<SupportRequest[]> => {
+    const { data } = await api.get('/support/my-requests')
+    return data
   },
 }
 

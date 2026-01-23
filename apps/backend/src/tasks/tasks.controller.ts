@@ -29,13 +29,11 @@ export class TasksController {
 
   @Get('feed')
   async getFeed(
-    @Query('longitude') longitude: number,
-    @Query('latitude') latitude: number,
     @Request() req,
+    @Query('city') city?: string,
   ) {
     return this.tasksService.getFeed(
-      parseFloat(longitude.toString()),
-      parseFloat(latitude.toString()),
+      city || 'Астана',
       req.user.id,
     );
   }

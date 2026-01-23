@@ -89,90 +89,27 @@ export class TasksService {
   }
 
   async getFeed(
-    longitude: number,
-    latitude: number,
+    city: string,
     userId: string,
   ): Promise<Task[]> {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:entry',message:'getFeed called',data:{longitude,latitude,userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    // Fixed radius: 1 km
-    const radiusMeters = 1000;
+    // Default to 'Астана' if city not provided
+    const selectedCity = city || 'Астана';
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:before-raw-query',message:'Before raw SQL query',data:{query:'SELECT t.id FROM tasks t WHERE...',params:[TaskStatus.CREATED,new Date(),longitude,latitude,radiusMeters]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    // PostGIS query: ST_DWithin with geography for accurate distance
-    // IMPORTANT: Exclude expired tasks from feed
-    // Use raw query to properly handle PostGIS geometry, then fetch with TypeORM
-    let taskIds;
-    try {
-      taskIds = await this.dataSource.query(
-        `SELECT t.id
-        FROM tasks t
-        WHERE t.status = $1
-          AND t."expiresAt" > $2
-          AND ST_DWithin(
-            t."geoPoint"::geography,
-            ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography,
-            $5
-          )
-        ORDER BY t."createdAt" DESC`,
-        [
-          TaskStatus.CREATED,
-          new Date(),
-          longitude,
-          latitude,
-          radiusMeters,
-        ],
-      );
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:after-raw-query',message:'Raw SQL query succeeded',data:{taskIdsCount:taskIds?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-    } catch (error: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:raw-query-error',message:'Raw SQL query failed',data:{error:error.message,sql:error.query},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      throw error;
-    }
-
-    // Fetch tasks with relations using TypeORM
-    if (taskIds.length === 0) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:no-tasks',message:'No tasks found, returning empty array',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      return [];
-    }
-
-    const ids = taskIds.map((row: any) => row.id);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:before-querybuilder',message:'Before TypeORM QueryBuilder',data:{idsCount:ids.length,firstFewIds:ids.slice(0,3)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    let queryBuilder = this.tasksRepository
+    // Simple city-based filtering using TypeORM QueryBuilder
+    const tasks = await this.tasksRepository
       .createQueryBuilder('task')
       .leftJoinAndSelect('task.createdBy', 'createdBy')
       .leftJoinAndSelect('task.claimedBy', 'claimedBy')
-      .where('task.id IN (:...ids)', { ids })
-      .orderBy('task.createdAt', 'DESC');
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:querybuilder-created',message:'QueryBuilder created',data:{sql:queryBuilder.getSql(),params:queryBuilder.getParameters()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
-    let tasks;
-    try {
-      tasks = await queryBuilder.getMany();
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:after-querybuilder',message:'QueryBuilder getMany succeeded',data:{tasksCount:tasks?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-    } catch (error: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:querybuilder-error',message:'QueryBuilder getMany failed',data:{error:error.message,stack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
-      throw error;
-    }
+      .where('task.city = :city', { city: selectedCity })
+      .andWhere('task.status = :status', { status: TaskStatus.CREATED })
+      .andWhere('task.expiresAt > :now', { now: new Date() })
+      .orderBy('task.createdAt', 'DESC')
+      .getMany();
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.service.ts:getFeed:exit',message:'getFeed completed',data:{tasksCount:tasks?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
+    this.logger.log(
+      `Feed loaded: city=${selectedCity}, userId=${userId}, taskCount=${tasks.length}`,
+    );
+
     return tasks;
   }
 
