@@ -42,6 +42,11 @@
     "myTasks": "Мои задачи",
     "admin": "Админ"
   },
+  "feed": {
+    "title": "Задачи в городе {city}",
+    "refresh": "Обновить",
+    "helperText": "Мы показываем все активные задачи в вашем городе"
+  },
   "task": {
     "create": "Создать задачу",
     "createTitle": "Создать задачу",
@@ -157,7 +162,10 @@
     }
   },
   "profile": {
+    "profile": "Профиль",
     "publicProfile": "Публичный профиль",
+    "settings": "Настройки",
+    "language": "Язык",
     "account": "Аккаунт",
     "support": "Поддержка",
     "appearance": "Внешний вид",
@@ -342,6 +350,9 @@
     "hoursAgo": "{count} часов назад",
     "daysAgo": "{count} дней назад",
     "yesterday": "Вчера",
+    "today": "Сегодня",
+    "thisWeek": "На этой неделе",
+    "older": "Ранее",
     "titles": {
       "userRestricted": "Аккаунт ограничен",
       "userUnrestricted": "Ограничение снято",

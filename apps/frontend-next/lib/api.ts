@@ -16,22 +16,27 @@ function getApiUrl(): string {
     return `${protocol}//${hostname}:3001`
   }
 
-  // Server-side fallback (SSR)
-  return 'http://localhost:3001'
+  // Server-side fallback (SSR/Docker)
+  return 'http://backend:3001'
 }
 
-const API_URL = getApiUrl()
-
+// Create axios instance with placeholder baseURL
+// Real baseURL will be set dynamically in request interceptor
 const api = axios.create({
-  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
+  withCredentials: false,
 })
 
-// Request interceptor to add auth token
+// Request interceptor to dynamically set baseURL and add auth token
 api.interceptors.request.use(
   (config) => {
+    // Dynamically compute API URL on EVERY request (fixes SSR caching issue)
+    const apiUrl = getApiUrl()
+    config.baseURL = apiUrl
+    
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -140,71 +145,8 @@ export const authApi = {
     return data
   },
   login: async (email: string, password: string) => {
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'E',
-          location: 'api.ts:authApi.login:entry',
-          message: 'api_login_called',
-          data: { email, apiUrl: API_URL },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-    } catch(e) {}
-    // #endregion
-
-    try {
-      const response = await api.post('/auth/login', { email, password })
-      
-      // #region agent log
-      try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'E',
-            location: 'api.ts:authApi.login:success',
-            message: 'api_login_success',
-            data: { hasData: !!response.data, hasAccessToken: !!response.data?.accessToken, hasUser: !!response.data?.user },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      } catch(e) {}
-      // #endregion
-
-      return response.data
-    } catch (error: any) {
-      // #region agent log
-      try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'E',
-            location: 'api.ts:authApi.login:error',
-            message: 'api_login_error',
-            data: { 
-              errorMessage: error?.message,
-              errorResponse: error?.response?.data,
-              statusCode: error?.response?.status,
-              statusText: error?.response?.statusText,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      } catch(e) {}
-      // #endregion
-      throw error
-    }
+    const { data } = await api.post('/auth/login', { email, password })
+    return data
   },
 }
 
@@ -220,11 +162,6 @@ export const tasksApi = {
     return data
   },
   create: async (task: CreateTaskDto) => {
-    // #region agent log
-    if (typeof window !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:tasksApi.create:entry',message:'tasksApi.create called',data:{task,hasLongitude:'longitude' in task,hasLatitude:'latitude' in task,hasCity:'city' in task,hasAddress:'address' in task},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    }
-    // #endregion
     const { data } = await api.post('/tasks', task)
     return data
   },
@@ -400,31 +337,12 @@ export interface SupportRequest {
 
 export const supportApi = {
   createRequest: async (data: CreateSupportRequestData) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.createRequest:entry',message:'createRequest called',data:{topic:data.topic,messageLength:data.message.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     const { data: response } = await api.post('/support', data)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.createRequest:success',message:'createRequest success',data:{response},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     return response
   },
   getAllRequests: async (): Promise<SupportRequest[]> => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:entry',message:'getAllRequests called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
-    try {
-      const { data } = await api.get('/support')
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:success',message:'getAllRequests success',data:{dataLength:data?.length||0,data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-      return data
-    } catch (err: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:supportApi.getAllRequests:error',message:'getAllRequests error',data:{error:err?.message,response:err?.response?.data,status:err?.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
-      throw err
-    }
+    const { data } = await api.get('/support')
+    return data
   },
   getMySupportRequests: async (): Promise<SupportRequest[]> => {
     const { data } = await api.get('/support/my-requests')

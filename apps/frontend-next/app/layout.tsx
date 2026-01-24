@@ -7,6 +7,7 @@ import { ToastProvider } from '@/contexts/ToastContext'
 import { NotificationHistoryProvider } from '@/contexts/NotificationHistoryContext'
 import ToastContainer from '@/components/ToastContainer'
 import NotificationChecker from '@/components/NotificationChecker'
+import NavigationWrapper from '@/components/NavigationWrapper'
 
 
 export const viewport: Viewport = {
@@ -14,6 +15,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#2563EB' },
     { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
@@ -39,7 +41,10 @@ export default function RootLayout({
             <ToastProvider>
               <AuthProvider>
                 <NotificationHistoryProvider>
-                  {children}
+                  <NavigationWrapper />
+                  <main className="mobile-content">
+                    {children}
+                  </main>
                   <NotificationChecker />
                   <ToastContainer />
                 </NotificationHistoryProvider>

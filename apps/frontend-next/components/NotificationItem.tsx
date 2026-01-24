@@ -173,29 +173,40 @@ export default function NotificationItem({ notification, onClick }: Notification
     <button
       onClick={onClick}
       className={`
-        w-full text-left p-4 border-b border-gray-200 dark:border-slate-700
+        w-full text-left px-4 py-2.5 border-b border-gray-100 dark:border-slate-800
         transition-colors duration-150
-        ${isUnread ? 'bg-blue-50 dark:bg-blue-900/10 border-l-4 border-l-primary' : 'bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800'}
+        ${isUnread ? 'bg-blue-50/50 dark:bg-blue-900/5' : 'bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800'}
       `}
     >
       <div className="flex items-start gap-3">
-        <div className={`flex-shrink-0 mt-0.5 ${iconColor}`}>{getNotificationIcon(notification.type)}</div>
+        {/* Compact Icon */}
+        <div className={`flex-shrink-0 mt-0.5 ${iconColor}`}>
+          <div className="w-4 h-4">
+            {getNotificationIcon(notification.type)}
+          </div>
+        </div>
+        
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className={`text-sm ${isUnread ? 'font-semibold text-gray-900 dark:text-gray-50' : 'font-medium text-gray-700 dark:text-gray-300'}`}>
+          {/* Title + Time in one row */}
+          <div className="flex items-baseline justify-between gap-2 mb-0.5">
+            <h4 className={`text-sm leading-tight ${isUnread ? 'font-medium text-gray-900 dark:text-gray-50' : 'font-normal text-gray-700 dark:text-gray-300'}`}>
               {notification.title}
             </h4>
-            {isUnread && (
-              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-primary mt-1.5"></div>
-            )}
+            <span className="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap flex-shrink-0">
+              {formatTimestamp(notification.timestamp, t)}
+            </span>
           </div>
-          <p className={`text-sm mt-1 ${isUnread ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400'}`}>
+          
+          {/* Message - single line with ellipsis */}
+          <p className={`text-xs leading-relaxed line-clamp-2 ${isUnread ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-500'}`}>
             {notification.message}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-            {formatTimestamp(notification.timestamp, t)}
-          </p>
         </div>
+        
+        {/* Unread indicator */}
+        {isUnread && (
+          <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary mt-2"></div>
+        )}
       </div>
     </button>
   )

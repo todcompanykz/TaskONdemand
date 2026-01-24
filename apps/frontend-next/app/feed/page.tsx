@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, Task } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 import OnboardingModal from '@/components/OnboardingModal'
 import { useI18n } from '@/contexts/I18nContext'
 import { StopwatchIcon, LocationPinIcon, StarIcon } from '@/components/TaskCardIcons'
@@ -85,7 +84,6 @@ export default function FeedPage() {
   if (authLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -97,32 +95,66 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-              {t('feed.title', { city: selectedCity })}
-            </h1>
+      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
+        {/* City Filter - Search Bar Style */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm">
+            {/* Location Icon */}
+            <svg 
+              className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={2} 
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            
+            {/* City Selector */}
             <select
               value={selectedCity}
               onChange={(e) => handleCityChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="flex-1 bg-transparent border-none outline-none text-base font-medium text-gray-900 dark:text-gray-50 cursor-pointer"
             >
               <option value="Астана">Астана</option>
             </select>
+            
+            {/* Refresh Icon Button */}
+            <button
+              onClick={loadTasks}
+              disabled={loading}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+              aria-label={t('feed.refresh')}
+            >
+              <svg 
+                className={`w-5 h-5 text-gray-600 dark:text-gray-400 ${loading ? 'animate-spin' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            </button>
           </div>
-          <button
-            onClick={loadTasks}
-            className="btn-outline text-sm"
-            disabled={loading}
-          >
-            {loading ? t('common.loading') : t('feed.refresh')}
-          </button>
         </div>
 
         {error && (
@@ -144,44 +176,45 @@ export default function FeedPage() {
             <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка задач...</p>
           </div>
         ) : tasks.length === 0 ? (
-          <div className="card text-center py-16">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-              <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <div className="card text-center py-12 md:py-16 px-4">
+            {/* Smaller, lighter icon */}
+            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gray-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 md:w-10 md:h-10 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-3">
+            
+            {/* Compact text with better line-height */}
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2 leading-relaxed">
               {t('emptyStates.feed.title')}
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
+            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-sm mx-auto">
               {t('emptyStates.feed.description')}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-              {t('emptyStates.feed.hint')}
-            </p>
-            <Link href="/tasks/create" className="btn-primary inline-block">
+            
+            <Link href="/tasks/create" className="btn-primary inline-block w-full md:w-auto">
               {t('emptyStates.feed.action')}
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {tasks.map((task) => (
               <Link
                 key={task.id}
                 href={`/tasks/${task.id}`}
-                className="card hover:shadow-md transition-shadow block relative"
+                className="card hover:shadow-md transition-shadow block relative p-4 md:p-6"
               >
-                {/* Reward at top-right with highlight */}
-                <div className="absolute top-4 right-4 bg-primary/10 dark:bg-primary/20 rounded-lg px-3 py-2">
-                  <span className="text-3xl font-bold text-primary dark:text-blue-400">
+                {/* Reward at top-right with highlight - Responsive */}
+                <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-primary/10 dark:bg-primary/20 rounded-lg px-2 py-1 md:px-3 md:py-2">
+                  <span className="text-xl md:text-3xl font-bold text-primary dark:text-blue-400">
                     {task.reward.toLocaleString()} ₸
                   </span>
                 </div>
 
                 {/* Urgency badge at top-left with icon */}
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`px-3 py-1.5 rounded-full text-sm font-semibold flex items-center gap-1.5 ${urgencyColors[task.urgency]}`}>
-                    <StopwatchIcon className="w-4 h-4" />
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className={`px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold flex items-center gap-1.5 ${urgencyColors[task.urgency]}`}>
+                    <StopwatchIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     {urgencyLabels[task.urgency]}
                   </span>
                   {task.createdBy?.ratingAvg && task.createdBy.ratingAvg > 0 && (
@@ -192,22 +225,22 @@ export default function FeedPage() {
                   )}
                 </div>
 
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2 pr-32">{task.shortDescription}</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{task.fullDescription}</p>
+                <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2 pr-20 md:pr-32">{task.shortDescription}</h2>
+                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{task.fullDescription}</p>
                 
                 {/* Location with icon */}
-                <div className="mb-4 flex items-center gap-2">
+                <div className="mb-3 md:mb-4 flex items-center gap-2">
                   <LocationPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                     {task.city}, {task.address}
                   </p>
                 </div>
 
-                <div className="flex justify-between items-center mt-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-3 md:mt-4">
                   {task.expiresAt && task.status === 'created' && (
                     <TaskCountdown expiresAt={task.expiresAt} status={task.status} />
                   )}
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                     {new Date(task.createdAt).toLocaleDateString('ru-RU')}
                   </span>
                 </div>

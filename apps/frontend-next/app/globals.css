@@ -244,3 +244,35 @@ label[data-theme-toggle="true"] .theme-toggle-container {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
+/* Mobile-first touch targets */
+@media (max-width: 768px) {
+  .btn-primary, .btn-secondary, .btn-danger, .btn-outline {
+    min-height: 44px;
+    width: 100%;
+  }
+  
+  .input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Safe area support for notch/home indicator */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .mobile-bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+}
+
+/* Content padding for fixed navigation */
+.mobile-content {
+  padding-top: 3.5rem; /* Top bar height */
+  padding-bottom: 5rem; /* Bottom nav height + safe area */
+}
+
+@media (min-width: 768px) {
+  .mobile-content {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}

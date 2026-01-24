@@ -37,22 +37,12 @@ export default function RegisterPage() {
 
     setLoading(true)
 
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register/page.tsx:36',message:'Register form submit',data:{hasFirstName:!!firstName,hasLastName:!!lastName,hasEmail:!!email,hasPassword:!!password,hasConfirmPassword:!!confirmPassword},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-    } catch(e) {}
-    // #endregion
-
     try {
       await register(email, firstName, lastName, password, confirmPassword, phoneNumber || undefined)
       router.push('/feed')
     } catch (err: any) {
-      // #region agent log
-      try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register/page.tsx:42',message:'Register error',data:{errorMessage:err.response?.data?.message || 'Ошибка регистрации',status:err.response?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      } catch(e) {}
-      // #endregion
-      setError(err.response?.data?.message || t('auth.registerError'))
+      const errorMessage = err.response?.data?.message || err.message || t('auth.registerError')
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }

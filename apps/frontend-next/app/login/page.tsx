@@ -18,87 +18,15 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[LOGIN] Form submitted', { email, hasPassword: !!password })
-    
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'D',
-          location: 'login/page.tsx:handleSubmit:entry',
-          message: 'login_form_submitted',
-          data: { email, hasPassword: !!password },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-    } catch(e) {}
-    // #endregion
-
     setError('')
     setLoading(true)
 
     try {
-      console.log('[LOGIN] Calling login function')
       await login(email, password)
-      console.log('[LOGIN] Login successful, waiting before redirect')
-      
-      // #region agent log
-      try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'D',
-            location: 'login/page.tsx:handleSubmit:before_redirect',
-            message: 'login_success_before_redirect',
-            data: {},
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      } catch(e) {}
-      // #endregion
-
       // Use window.location for full page reload to ensure state is loaded from localStorage
-      console.log('[LOGIN] Redirecting to /feed with full reload')
       window.location.href = '/feed'
     } catch (err: any) {
-      console.error('[LOGIN] Login error', err)
-      console.error('[LOGIN] Error details:', {
-        message: err?.message,
-        response: err?.response?.data,
-        status: err?.response?.status,
-        statusText: err?.response?.statusText,
-      })
-      // #region agent log
-      try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'D',
-            location: 'login/page.tsx:handleSubmit:error',
-            message: 'login_form_error',
-            data: { 
-              errorMessage: err?.message,
-              errorResponse: err?.response?.data,
-              statusCode: err?.response?.status,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      } catch(e) {}
-      // #endregion
-
       const errorMessage = err.response?.data?.message || err.message || t('auth.loginError')
-      console.log('[LOGIN] Setting error message:', errorMessage)
       setError(errorMessage)
     } finally {
       setLoading(false)

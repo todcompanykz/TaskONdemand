@@ -162,7 +162,10 @@
     }
   },
   "profile": {
+    "profile": "Profile",
     "publicProfile": "Public profile",
+    "settings": "Settings",
+    "language": "Language",
     "account": "Account",
     "support": "Support",
     "appearance": "Appearance",
@@ -347,6 +350,9 @@
     "hoursAgo": "{count} hours ago",
     "daysAgo": "{count} days ago",
     "yesterday": "Yesterday",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "older": "Older",
     "titles": {
       "userRestricted": "Account restricted",
       "userUnrestricted": "Restriction removed",

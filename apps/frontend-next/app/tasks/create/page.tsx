@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 import { useToast } from '@/contexts/ToastContext'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -85,13 +84,12 @@ export default function CreateTaskPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-      <Navbar />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-8">Создать задачу</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-50 mb-6 md:mb-8">Создать задачу</h1>
 
-        <div className="card">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="card p-4 md:p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                 {error}
@@ -156,7 +154,7 @@ export default function CreateTaskPage() {
                 required
                 value={formData.urgency}
                 onChange={(e) => setFormData({ ...formData, urgency: e.target.value as any })}
-                className="input"
+                className="input min-h-[44px]"
               >
                 <option value="low">Низкая</option>
                 <option value="medium">Средняя</option>
@@ -197,7 +195,7 @@ export default function CreateTaskPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full"
+              className="btn-primary w-full min-h-[44px]"
             >
               {loading ? 'Создание...' : 'Создать задачу'}
             </button>

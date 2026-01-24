@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersApi, UserProfile } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 import { useI18n } from '@/contexts/I18nContext'
+import ThemeToggle from '@/components/ThemeToggle'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export default function UserProfilePage() {
   const router = useRouter()
@@ -54,8 +56,7 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -68,9 +69,8 @@ export default function UserProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+        <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
           <div className="card text-center">
             <p className="text-gray-600 dark:text-gray-400">{error || 'Профиль не найден'}</p>
           </div>
@@ -136,9 +136,8 @@ export default function UserProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
         <div className="card mb-6">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -231,6 +230,72 @@ export default function UserProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Settings Section - Only for own profile */}
+        {currentUser && currentUser.id === profile.id && (
+          <div className="card mb-6 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">
+              {t('profile.settings')}
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Language Setting */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('profile.language')}
+                  </span>
+                </div>
+                <LanguageSwitcher />
+              </div>
+              
+              {/* Theme Setting */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('profile.appearance')}
+                  </span>
+                </div>
+                <div className="relative" style={{ width: '80px', height: '40px' }}>
+                  <ThemeToggle />
+                </div>
+              </div>
+              
+              {/* Divider before links */}
+              <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mt-2">
+                <Link 
+                  href="/settings/account" 
+                  className="flex items-center justify-between py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg px-2 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('profile.account')}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+                
+                <Link 
+                  href="/settings/notifications" 
+                  className="flex items-center justify-between py-2 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg px-2 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('profile.notifications')}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="card">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">

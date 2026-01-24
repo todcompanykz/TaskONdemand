@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useI18n } from '@/contexts/I18nContext'
 import { usersApi, NotificationSettings, UpdateNotificationSettingsData } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 
 export default function NotificationSettingsPage() {
   const router = useRouter()
@@ -128,8 +127,7 @@ export default function NotificationSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -142,9 +140,8 @@ export default function NotificationSettingsPage() {
 
   if (!settings) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+        <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
           <div className="card text-center">
             <p className="text-gray-600 dark:text-gray-400">{t('common.error')}</p>
           </div>
@@ -173,9 +170,8 @@ export default function NotificationSettingsPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">
             {t('settings.notifications.title')}

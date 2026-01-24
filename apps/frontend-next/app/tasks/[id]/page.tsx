@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, reviewsApi, Task } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 import StarRating from '@/components/StarRating'
 import { useToast } from '@/contexts/ToastContext'
 import { useI18n } from '@/contexts/I18nContext'
@@ -345,8 +344,7 @@ export default function TaskDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -359,10 +357,9 @@ export default function TaskDetailsPage() {
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="card text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+        <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
+          <div className="card text-center p-4 md:p-6">
             <p className="text-gray-600 dark:text-gray-400">Задача не найдена</p>
           </div>
         </div>
@@ -375,9 +372,8 @@ export default function TaskDetailsPage() {
   const canSeePhone = task.status === 'claimed' && (isCreator || isClaimer)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200">
-      <Navbar />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg mb-6">
             {error}

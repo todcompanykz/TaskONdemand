@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { adminApi, Task, User, AnalyticsData, supportApi, SupportRequest } from '@/lib/api'
-import Navbar from '@/components/Navbar'
 import { useI18n } from '@/contexts/I18nContext'
 
 enum TaskStatus {
@@ -132,8 +131,7 @@ export default function AdminPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -145,9 +143,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-8">Панель администратора</h1>
 
         {error && (
