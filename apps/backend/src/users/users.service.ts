@@ -8,6 +8,7 @@ import { UserNotificationSettings } from './entities/user-notification-settings.
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
+import { UpdateFCMTokenDto } from './dto/update-fcm-token.dto';
 
 @Injectable()
 export class UsersService {
@@ -158,5 +159,24 @@ export class UsersService {
     }
 
     return await this.notificationSettingsRepository.save(settings);
+  }
+
+  async updateFCMToken(userId: string, token: string | null): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.fcmToken = token;
+    await this.usersRepository.save(user);
+  }
+
+  async getFCMToken(userId: string): Promise<string | null> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user.fcmToken;
   }
 }

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateSupportRequestDto } from './dto/create-support-request.dto';
 import { ReplySupportRequestDto } from './dto/reply-support-request.dto';
 import { SupportRequest } from './entities/support-request.entity';
+import { FCMService } from '../notifications/fcm.service';
 
 @Injectable()
 export class SupportService {
@@ -12,6 +13,7 @@ export class SupportService {
   constructor(
     @InjectRepository(SupportRequest)
     private supportRequestRepository: Repository<SupportRequest>,
+    private fcmService: FCMService,
   ) {}
 
   async createSupportRequest(userId: string, dto: CreateSupportRequestDto) {
@@ -103,6 +105,19 @@ export class SupportService {
       requestId: saved.id,
       adminId,
       userId: saved.userId,
+    });
+
+    // Send FCM notification to user
+    this.fcmService.sendNotification(saved.userId, {
+      title: 'Ответ от поддержки',
+      body: `Получен ответ на ваш запрос: "${saved.topic}"`,
+      data: {
+        id: `support_reply_${saved.id}`,
+        type: 'support_reply',
+        actionUrl: '/support/my-requests',
+      },
+    }).catch((error) => {
+      this.logger.error(`Failed to send FCM notification to user ${saved.userId}:`, error);
     });
 
     return this.supportRequestRepository.findOne({

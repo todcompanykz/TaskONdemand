@@ -3,6 +3,7 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
+import { FCMService } from '../notifications/fcm.service';
 
 @Injectable()
 export class AdminService {
@@ -15,6 +16,7 @@ export class AdminService {
     private tasksRepository: Repository<Task>,
     @InjectDataSource()
     private dataSource: DataSource,
+    private fcmService: FCMService,
   ) {}
 
   async getUsers() {
@@ -258,6 +260,19 @@ export class AdminService {
       timestamp: new Date().toISOString(),
     });
 
+    // Send FCM notification
+    this.fcmService.sendNotification(userId, {
+      title: 'Аккаунт ограничен',
+      body: 'Ваш аккаунт был ограничен администратором. Обратитесь в поддержку для получения дополнительной информации.',
+      data: {
+        id: `user_restricted_${userId}`,
+        type: 'user_restricted',
+        actionUrl: '/settings/account',
+      },
+    }).catch((error) => {
+      this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
+    });
+
     return updatedUser;
   }
 
@@ -278,6 +293,19 @@ export class AdminService {
       userId,
       adminId,
       timestamp: new Date().toISOString(),
+    });
+
+    // Send FCM notification
+    this.fcmService.sendNotification(userId, {
+      title: 'Ограничения сняты',
+      body: 'Ограничения с вашего аккаунта были сняты. Вы снова можете использовать все функции приложения.',
+      data: {
+        id: `user_unrestricted_${userId}`,
+        type: 'user_unrestricted',
+        actionUrl: '/feed',
+      },
+    }).catch((error) => {
+      this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
     });
 
     return updatedUser;

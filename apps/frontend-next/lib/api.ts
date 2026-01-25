@@ -255,6 +255,9 @@ export const usersApi = {
     const { data } = await api.put('/users/me/notifications', updateData)
     return data
   },
+  updateFCMToken: async (token: string | null): Promise<void> => {
+    await api.post('/users/me/fcm-token', { token })
+  },
 }
 
 export const reviewsApi = {

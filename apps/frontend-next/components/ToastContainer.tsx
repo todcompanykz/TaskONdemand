@@ -11,12 +11,12 @@ export default function ToastContainer() {
 
   return (
     <div
-      className="fixed top-4 right-4 z-[10000] flex flex-col gap-2 max-w-md w-full pointer-events-none"
+      className="toast-container fixed flex flex-col gap-2 pointer-events-none"
       aria-live="polite"
       aria-atomic="true"
     >
       {toasts.map((toast) => (
-        <div key={toast.id} className="pointer-events-auto">
+        <div key={toast.id} className="pointer-events-auto w-full">
           <Toast toast={toast} onRemove={removeToast} />
         </div>
       ))}

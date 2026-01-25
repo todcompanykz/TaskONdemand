@@ -14,7 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    "firstName" VARCHAR(100) NOT NULL,
+    "lastName" VARCHAR(100) NOT NULL,
     "phoneNumber" VARCHAR(50),
+    "ratingAvg" DECIMAL(3,2) NOT NULL DEFAULT 0.00,
+    "ratingCount" INTEGER NOT NULL DEFAULT 0,
+    "isRestricted" BOOLEAN NOT NULL DEFAULT false,
+    "fcmToken" TEXT,
     "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -4,6 +4,7 @@ import React from 'react'
 import { Task } from '@/lib/api'
 import { CheckIcon } from '@heroicons/react/24/solid'
 import { useI18n } from '@/contexts/I18nContext'
+import AnimatedProgressDots from './AnimatedProgressDots'
 
 interface TaskStatusTimelineProps {
   task: Task
@@ -141,13 +142,23 @@ export default function TaskStatusTimeline({ task, userRole }: TaskStatusTimelin
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-2 ${
-                    step.status === 'completed' || step.status === 'current'
-                      ? 'bg-primary'
-                      : 'bg-gray-300 dark:bg-slate-600'
-                  }`}
-                />
+                <div className="flex-1 flex items-center justify-center mx-2">
+                  {step.status === 'completed' ? (
+                    // Completed step: show static blue line
+                    <div className="w-full h-0.5 bg-primary" />
+                  ) : step.status === 'current' && steps[index + 1]?.status === 'future' ? (
+                    // Current step with future next: show animated dots
+                    <AnimatedProgressDots 
+                      isActive={true} 
+                      color="primary" 
+                      size="md"
+                      orientation="horizontal"
+                    />
+                  ) : (
+                    // Future steps: show static gray line
+                    <div className="w-full h-0.5 bg-gray-300 dark:bg-slate-600" />
+                  )}
+                </div>
               )}
             </React.Fragment>
           ))}
@@ -174,14 +185,25 @@ export default function TaskStatusTimeline({ task, userRole }: TaskStatusTimelin
                   )}
                 </div>
                 {index < steps.length - 1 && (
-                  <div
-                    className={`w-0.5 flex-1 mt-2 ${
-                      step.status === 'completed' || step.status === 'current'
-                        ? 'bg-primary'
-                        : 'bg-gray-300 dark:bg-slate-600'
-                    }`}
-                    style={{ minHeight: '2rem' }}
-                  />
+                  <div className="flex flex-col items-center flex-1 mt-2" style={{ minHeight: '2rem' }}>
+                    {step.status === 'completed' ? (
+                      // Completed step: show static blue line
+                      <div className="w-0.5 h-full bg-primary" />
+                    ) : step.status === 'current' && steps[index + 1]?.status === 'future' ? (
+                      // Current step with future next: show animated dots (vertical)
+                      <div className="flex flex-col items-center justify-center h-full py-1">
+                        <AnimatedProgressDots 
+                          isActive={true} 
+                          color="primary" 
+                          size="sm"
+                          orientation="vertical"
+                        />
+                      </div>
+                    ) : (
+                      // Future steps: show static gray line
+                      <div className="w-0.5 h-full bg-gray-300 dark:bg-slate-600" />
+                    )}
+                  </div>
                 )}
               </div>
               <div className="flex-1 pt-1">

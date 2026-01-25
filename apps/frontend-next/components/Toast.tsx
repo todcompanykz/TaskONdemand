@@ -52,7 +52,7 @@ export default function Toast({ toast, onRemove }: ToastProps) {
   return (
     <div
       className={`
-        flex items-start gap-3 p-4 rounded-lg border shadow-lg
+        flex items-center gap-3 p-3 md:p-4 rounded-lg border shadow-lg
         animate-slide-in-right
         ${toastStyles[toast.type]}
       `}

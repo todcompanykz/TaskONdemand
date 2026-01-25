@@ -1,9 +1,10 @@
-import { Controller, Get, Put, UseGuards, Request, Param, Body } from '@nestjs/common';
+import { Controller, Get, Put, Post, UseGuards, Request, Param, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
+import { UpdateFCMTokenDto } from './dto/update-fcm-token.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -63,5 +64,14 @@ export class UsersController {
     @Body() updateDto: UpdateNotificationSettingsDto,
   ) {
     return this.usersService.updateNotificationSettings(req.user.id, updateDto);
+  }
+
+  @Post('me/fcm-token')
+  async updateFCMToken(
+    @Request() req,
+    @Body() updateDto: UpdateFCMTokenDto,
+  ) {
+    await this.usersService.updateFCMToken(req.user.id, updateDto.token);
+    return { success: true };
   }
 }

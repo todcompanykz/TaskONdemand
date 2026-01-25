@@ -6,9 +6,10 @@ import { AdminGuard } from './guards/admin.guard';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { SupportModule } from '../support/support.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Task]), SupportModule],
+  imports: [TypeOrmModule.forFeature([User, Task]), SupportModule, NotificationsModule],
   controllers: [AdminController],
   providers: [AdminService, AdminGuard],
   exports: [AdminGuard],

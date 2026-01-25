@@ -164,10 +164,150 @@ const formatTimestamp = (timestamp: number, t: (key: string, params?: Record<str
   }
 }
 
+// Translate message if it's a localization key, with fallback
+const translateMessage = (
+  message: string,
+  type: NotificationItemType['type'],
+  t: (key: string, params?: Record<string, string | number>) => string
+): string => {
+  // Fallback messages based on notification type (always use translation)
+  const fallbackMessages: Partial<Record<NotificationItemType['type'], string>> = {
+    task_claimed: t('notifications.taskClaimed.message'),
+    task_completed: t('notifications.taskCompleted.message'),
+    work_confirmed: t('notifications.workConfirmed.message'),
+    payment_confirmed: t('notifications.paymentConfirmed.message'),
+    task_cancelled: t('notifications.taskCancelled.message'),
+    task_expired: t('notifications.taskExpired.message'),
+    user_restricted: t('notifications.userRestricted.message'),
+    user_unrestricted: t('notifications.userUnrestricted.message'),
+    user_blocked: t('notifications.userBlocked.message'),
+    claim_blocked: t('notifications.claimBlocked.message'),
+    support_reply: t('notifications.supportReply.message'),
+  }
+
+  if (!message) {
+    // If message is empty, use fallback
+    return fallbackMessages[type] || t('common.notification')
+  }
+
+  // Check if message looks like a localization key
+  // Pattern: "notifications.xxx.message" or contains "notifications." with dots
+  const isLocalizationKey = 
+    (message.includes('.') && message.startsWith('notifications.')) ||
+    (message.includes('notifications.') && message.includes('.message'))
+
+  if (isLocalizationKey) {
+    try {
+      const translated = t(message)
+      // If translation returned the same key, translation not found - use fallback
+      if (translated !== message) {
+        return translated
+      }
+    } catch (e) {
+      // Translation failed, use fallback
+      console.warn('Failed to translate notification key:', message, e)
+    }
+    // If we get here, translation failed or returned the same key - use fallback
+    return fallbackMessages[type] || t('common.notification')
+  }
+
+  // If message doesn't look like a key, check if it's already a translated text
+  // If it contains common Russian/English/Kazakh characters, it's likely already translated
+  const hasTranslatedChars = /[а-яёА-ЯЁҚқҒғҢңҮүӨөІіӘә]/.test(message) || 
+                             /[a-zA-Z]/.test(message) && message.length > 10
+
+  // If message looks like it's already translated, return as is
+  if (hasTranslatedChars && !message.includes('notifications.')) {
+    return message
+  }
+
+  // Otherwise, use fallback based on type (safest option)
+  return fallbackMessages[type] || message || t('common.notification')
+}
+
+// Get subtitle for notification type
+const getNotificationSubtitle = (
+  type: NotificationItemType['type'],
+  t: (key: string, params?: Record<string, string | number>) => string
+): string | null => {
+  // Convert type to camelCase for key lookup
+  const typeToKey: Record<NotificationItemType['type'], string> = {
+    task_claimed: 'taskClaimed',
+    task_completed: 'taskCompleted',
+    work_confirmed: 'workConfirmed',
+    payment_confirmed: 'paymentConfirmed',
+    task_cancelled: 'taskCancelled',
+    task_expired: 'taskExpired',
+    user_restricted: 'userRestricted',
+    user_unrestricted: 'userUnrestricted',
+    user_blocked: 'userBlocked',
+    claim_blocked: 'claimBlocked',
+    support_reply: 'supportReply',
+  }
+
+  const key = typeToKey[type]
+  if (!key) return null
+
+  try {
+    const subtitle = t(`notifications.${key}.subtitle`)
+    // If translation returned the same key, subtitle not found
+    if (subtitle && subtitle !== `notifications.${key}.subtitle`) {
+      return subtitle
+    }
+  } catch {
+    // Fallback
+  }
+
+  return null
+}
+
 export default function NotificationItem({ notification, onClick }: NotificationItemProps) {
   const { t } = useI18n()
   const iconColor = getNotificationColor(notification.type, notification.read)
   const isUnread = !notification.read
+
+  // Always get the correct translated message based on type
+  // If stored message is a key, ignore it and use fallback
+  const getTranslatedMessage = (): string => {
+    const storedMessage = notification.message || ''
+    
+    // Check if stored message looks like a localization key
+    const isKey = storedMessage.includes('.') && 
+                  (storedMessage.startsWith('notifications.') || 
+                   storedMessage.includes('notifications.') ||
+                   storedMessage.match(/^notifications\.[a-zA-Z]+\.[a-zA-Z]+$/))
+    
+    // If it's definitely a key, always use fallback based on type
+    if (isKey) {
+      const fallbackMessages: Partial<Record<NotificationItemType['type'], string>> = {
+        task_claimed: t('notifications.taskClaimed.message'),
+        task_completed: t('notifications.taskCompleted.message'),
+        work_confirmed: t('notifications.workConfirmed.message'),
+        payment_confirmed: t('notifications.paymentConfirmed.message'),
+        task_cancelled: t('notifications.taskCancelled.message'),
+        task_expired: t('notifications.taskExpired.message'),
+        user_restricted: t('notifications.userRestricted.message'),
+        user_unrestricted: t('notifications.userUnrestricted.message'),
+        user_blocked: t('notifications.userBlocked.message'),
+        claim_blocked: t('notifications.claimBlocked.message'),
+        support_reply: t('notifications.supportReply.message'),
+      }
+      const fallback = fallbackMessages[notification.type]
+      // If fallback is a key (translation failed), return a safe message
+      if (fallback && !fallback.includes('notifications.')) {
+        return fallback
+      }
+      return t('common.notification')
+    }
+    
+    // If stored message looks translated, use translateMessage to handle edge cases
+    return translateMessage(storedMessage, notification.type, t)
+  }
+
+  const translatedMessage = getTranslatedMessage()
+  
+  // Get subtitle (microcopy)
+  const subtitle = getNotificationSubtitle(notification.type, t)
 
   return (
     <button
@@ -189,7 +329,7 @@ export default function NotificationItem({ notification, onClick }: Notification
         <div className="flex-1 min-w-0">
           {/* Title + Time in one row */}
           <div className="flex items-baseline justify-between gap-2 mb-0.5">
-            <h4 className={`text-sm leading-tight ${isUnread ? 'font-medium text-gray-900 dark:text-gray-50' : 'font-normal text-gray-700 dark:text-gray-300'}`}>
+            <h4 className={`text-sm font-semibold leading-tight ${isUnread ? 'text-gray-900 dark:text-gray-50' : 'text-gray-700 dark:text-gray-300'}`}>
               {notification.title}
             </h4>
             <span className="text-xs text-gray-500 dark:text-gray-500 whitespace-nowrap flex-shrink-0">
@@ -197,10 +337,17 @@ export default function NotificationItem({ notification, onClick }: Notification
             </span>
           </div>
           
-          {/* Message - single line with ellipsis */}
-          <p className={`text-xs leading-relaxed line-clamp-2 ${isUnread ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500 dark:text-gray-500'}`}>
-            {notification.message}
+          {/* Message - main text */}
+          <p className={`text-sm leading-relaxed ${isUnread ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400'}`}>
+            {translatedMessage}
           </p>
+          
+          {/* Subtitle (microcopy) - if available */}
+          {subtitle && (
+            <p className={`text-xs leading-relaxed mt-0.5 ${isUnread ? 'text-gray-500 dark:text-gray-500' : 'text-gray-400 dark:text-gray-500'}`}>
+              {subtitle}
+            </p>
+          )}
         </div>
         
         {/* Unread indicator */}

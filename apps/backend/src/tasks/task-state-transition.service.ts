@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Task, TaskStatus } from './entities/task.entity';
 import { TaskStateMachine } from './task-state-machine';
+import { FCMService } from '../notifications/fcm.service';
 
 /**
  * Centralized Task State Transition Service
@@ -26,6 +27,7 @@ export class TaskStateTransitionService {
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
     private dataSource: DataSource,
+    private fcmService: FCMService,
   ) {}
 
   /**
@@ -95,6 +97,11 @@ export class TaskStateTransitionService {
         newStatus,
         reason: reason || 'manual',
         timestamp: new Date().toISOString(),
+      });
+
+      // Send FCM notification for status changes
+      this.sendStatusChangeNotification(savedTask, oldStatus, newStatus).catch((error) => {
+        this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
       });
 
       return savedTask;
@@ -185,6 +192,11 @@ export class TaskStateTransitionService {
         timestamp: new Date().toISOString(),
       });
 
+      // Send FCM notification to task creator
+      this.sendStatusChangeNotification(savedTask, TaskStatus.CREATED, TaskStatus.CLAIMED).catch((error) => {
+        this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
+      });
+
       return savedTask;
     });
   }
@@ -234,9 +246,64 @@ export class TaskStateTransitionService {
           claimedById: task.claimedById,
           timestamp: new Date().toISOString(),
         });
+
+        // Send FCM notification to both creator and executor
+        this.sendStatusChangeNotification(task, TaskStatus.CLAIMED, TaskStatus.COMPLETED).catch((error) => {
+          this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
+        });
       }
 
       return await taskRepository.save(task);
     });
+  }
+
+  /**
+   * Send FCM notification for task status changes
+   */
+  private async sendStatusChangeNotification(
+    task: Task,
+    oldStatus: TaskStatus,
+    newStatus: TaskStatus,
+  ): Promise<void> {
+    const statusMessages: Record<TaskStatus, { title: string; body: string }> = {
+      [TaskStatus.CREATED]: { title: 'Новая задача', body: 'Задача создана' },
+      [TaskStatus.CLAIMED]: { title: 'Задача взята', body: 'Ваша задача была взята исполнителем' },
+      [TaskStatus.COMPLETED]: { title: 'Задача выполнена', body: 'Задача успешно завершена' },
+      [TaskStatus.CANCELLED]: { title: 'Задача отменена', body: 'Задача была отменена' },
+      [TaskStatus.EXPIRED]: { title: 'Задача истекла', body: 'Время выполнения задачи истекло' },
+    };
+
+    const message = statusMessages[newStatus];
+    if (!message) return;
+
+    // Determine who should receive the notification
+    const recipients: string[] = [];
+
+    if (newStatus === TaskStatus.CLAIMED) {
+      // Notify task creator
+      if (task.createdById) recipients.push(task.createdById);
+    } else if (newStatus === TaskStatus.COMPLETED || newStatus === TaskStatus.CANCELLED) {
+      // Notify both creator and executor
+      if (task.createdById) recipients.push(task.createdById);
+      if (task.claimedById) recipients.push(task.claimedById);
+    } else if (newStatus === TaskStatus.EXPIRED) {
+      // Notify creator and executor if exists
+      if (task.createdById) recipients.push(task.createdById);
+      if (task.claimedById) recipients.push(task.claimedById);
+    }
+
+    // Send notifications
+    for (const recipientId of recipients) {
+      await this.fcmService.sendNotification(recipientId, {
+        title: message.title,
+        body: `${message.body}: ${task.shortDescription}`,
+        data: {
+          id: `task-${task.id}-${newStatus}`,
+          type: `task_${newStatus.toLowerCase()}`,
+          taskId: task.id,
+          actionUrl: `/tasks/${task.id}`,
+        },
+      });
+    }
   }
 }

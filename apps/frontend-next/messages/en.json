@@ -8,7 +8,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "notification": "Notification"
   },
   "auth": {
     "login": "Login",
@@ -294,49 +295,65 @@
   "notifications": {
     "userRestricted": {
       "title": "Your account is restricted",
-      "message": "An administrator has restricted your account. You cannot claim new tasks. Please contact support."
+      "message": "An administrator has restricted your account",
+      "subtitle": "You cannot claim new tasks. Please contact support."
     },
     "userUnrestricted": {
       "title": "Restriction removed",
-      "message": "The restriction on your account has been removed. You can now claim tasks."
+      "message": "The restriction on your account has been removed",
+      "subtitle": "You can now claim tasks"
     },
     "userBlocked": {
       "title": "Temporary block",
-      "message": "You are temporarily blocked from claiming tasks for 24 hours due to frequent cancellations/refusals."
+      "message": "You are temporarily blocked from claiming tasks",
+      "subtitle": "Block will be lifted in 24 hours"
     },
     "claimBlocked": {
       "title": "Cannot claim task",
-      "message": "You cannot claim this task. Your account is restricted or temporarily blocked."
+      "message": "You cannot claim this task",
+      "subtitle": "Your account is restricted or temporarily blocked"
     },
     "taskClaimed": {
       "title": "Task claimed",
-      "message": "Your task \"{taskTitle}\" has been claimed by an executor.",
+      "message": "Your task has been taken in work",
+      "subtitle": "Executor has already started working",
       "action": "Open task"
     },
     "taskCancelled": {
       "title": "Task cancelled",
-      "message": "Task \"{taskTitle}\" was cancelled by {by}.",
+      "message": "Task was cancelled",
+      "subtitle": "You can create a new task",
       "action": "Open task"
     },
     "taskCompleted": {
       "title": "Task completed",
-      "message": "Task \"{taskTitle}\" has been completed successfully.",
+      "message": "Task completed successfully",
+      "subtitle": "All stages completed",
       "action": "Open task"
     },
     "taskExpired": {
       "title": "Task expired",
-      "message": "Task \"{taskTitle}\" has expired.",
+      "message": "Task execution time has expired",
+      "subtitle": "Task is no longer available",
       "action": "Open task"
     },
     "workConfirmed": {
       "title": "Work confirmed",
-      "message": "Customer confirmed work completion for task \"{taskTitle}\".",
+      "message": "Executor confirmed work completion",
+      "subtitle": "Work completed with quality",
       "action": "Open task"
     },
     "paymentConfirmed": {
       "title": "Payment confirmed",
-      "message": "Executor confirmed payment receipt for task \"{taskTitle}\".",
+      "message": "Payment confirmed",
+      "subtitle": "Funds received",
       "action": "Open task"
+    },
+    "supportReply": {
+      "title": "Support reply",
+      "message": "Support replied to your request",
+      "subtitle": "We'll help solve your issue",
+      "action": "Open"
     }
   },
   "notificationHistory": {

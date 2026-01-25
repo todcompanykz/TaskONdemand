@@ -38,6 +38,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   isRestricted: boolean;
 
+  @Column({ nullable: true, type: 'text' })
+  fcmToken: string | null; // Firebase Cloud Messaging token for push notifications
+
   @CreateDateColumn()
   createdAt: Date;
 

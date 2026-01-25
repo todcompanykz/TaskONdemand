@@ -1,13 +1,25 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNotificationHistory } from '@/contexts/NotificationHistoryContext'
 import NotificationPanel from './NotificationPanel'
+import MobileNotificationScreen from './MobileNotificationScreen'
 
 export default function NotificationBell() {
   const { unreadCount } = useNotificationHistory()
   const [isOpen, setIsOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const bellRef = useRef<HTMLButtonElement>(null)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const togglePanel = () => {
     setIsOpen((prev) => !prev)
@@ -36,7 +48,11 @@ export default function NotificationBell() {
           </span>
         )}
       </button>
-      <NotificationPanel isOpen={isOpen} onClose={() => setIsOpen(false)} bellRef={bellRef} />
+      {isMobile ? (
+        <MobileNotificationScreen isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      ) : (
+        <NotificationPanel isOpen={isOpen} onClose={() => setIsOpen(false)} bellRef={bellRef} />
+      )}
     </>
   )
 }

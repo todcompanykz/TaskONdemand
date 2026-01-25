@@ -136,8 +136,19 @@ export function NotificationHistoryProvider({ children }: { children: React.Reac
 
 export function useNotificationHistory() {
   const context = useContext(NotificationHistoryContext)
+  
+  // Always return safe default if context is undefined (SSR or provider not initialized)
   if (context === undefined) {
-    throw new Error('useNotificationHistory must be used within a NotificationHistoryProvider')
+    return {
+      notifications: [],
+      unreadCount: 0,
+      addNotification: () => {},
+      markAsRead: () => {},
+      markAllAsRead: () => {},
+      clearHistory: () => {},
+      getNotifications: () => [],
+    }
   }
+  
   return context
 }

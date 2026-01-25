@@ -11,6 +11,7 @@ import { RedisModule } from './redis/redis.module';
 import { HealthModule } from './health/health.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { SupportModule } from './support/support.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SupportModule } from './support/support.module';
     HealthModule,
     ReviewsModule,
     SupportModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
