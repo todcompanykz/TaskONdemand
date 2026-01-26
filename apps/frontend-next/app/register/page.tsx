@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -9,7 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { register } = useAuth()
+  const { register, user, loading: authLoading } = useAuth()
   const { t } = useI18n()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -19,6 +19,13 @@ export default function RegisterPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect to feed if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/feed')
+    }
+  }, [user, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

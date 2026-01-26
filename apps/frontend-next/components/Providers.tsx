@@ -11,6 +11,7 @@ import NavigationWrapper from '@/components/NavigationWrapper'
 import FCMProvider from '@/components/FCMProvider'
 import InstallPrompt from '@/components/InstallPrompt'
 import HideAddressBar from '@/components/HideAddressBar'
+import PageTransition from '@/components/PageTransition'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -23,7 +24,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 <HideAddressBar />
                 <NavigationWrapper />
                 <main className="mobile-content">
-                  {children}
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
                 </main>
                 <NotificationChecker />
                 <ToastContainer />

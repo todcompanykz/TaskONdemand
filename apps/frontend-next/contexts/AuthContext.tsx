@@ -32,24 +32,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:34',message:'AuthContext useEffect start',data:{hasToken:!!localStorage.getItem('token'),hasStoredUser:!!localStorage.getItem('user')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+    } catch(e) {}
+    // #endregion
+
     const token = localStorage.getItem('token')
     const storedUser = localStorage.getItem('user')
     
     if (token && storedUser) {
       try {
-        setUser(JSON.parse(storedUser))
-        // Verify token is still valid
-        usersApi.getMe().catch(() => {
+        const parsedUser = JSON.parse(storedUser)
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:42',message:'AuthContext verifying token before setting user',data:{userId:parsedUser?.id,userEmail:parsedUser?.email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        } catch(e) {}
+        // #endregion
+        // Verify token is still valid BEFORE setting user
+        usersApi.getMe().then((currentUser) => {
+          // #region agent log
+          try {
+            fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:47',message:'AuthContext token verification success, setting user',data:{userId:currentUser?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          } catch(e) {}
+          // #endregion
+          setUser(currentUser || parsedUser)
+          setLoading(false)
+        }).catch(() => {
+          // #region agent log
+          try {
+            fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:52',message:'AuthContext token verification failed, clearing user',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          } catch(e) {}
+          // #endregion
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           setUser(null)
+          setLoading(false)
         })
       } catch (error) {
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:60',message:'AuthContext parse error, clearing storage',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        } catch(e) {}
+        // #endregion
         localStorage.removeItem('token')
         localStorage.removeItem('user')
+        setLoading(false)
       }
+    } else {
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContext.tsx:68',message:'AuthContext no token or storedUser',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      } catch(e) {}
+      // #endregion
+      setLoading(false)
     }
-    setLoading(false)
   }, [])
 
   const login = async (email: string, password: string) => {

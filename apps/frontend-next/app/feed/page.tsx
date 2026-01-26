@@ -1,27 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { tasksApi, Task } from '@/lib/api'
 import OnboardingModal from '@/components/OnboardingModal'
 import { useI18n } from '@/contexts/I18nContext'
-import { StopwatchIcon, LocationPinIcon, StarIcon } from '@/components/TaskCardIcons'
-import TaskCountdown from '@/components/TaskCountdown'
 import ContextualHint from '@/components/ContextualHint'
-
-const urgencyColors = {
-  low: 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300',
-  medium: 'bg-warning/20 dark:bg-warning/30 text-warning dark:text-yellow-400',
-  high: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
-}
-
-const urgencyLabels = {
-  low: 'Низкая',
-  medium: 'Средняя',
-  high: 'Высокая',
-}
+import TaskCard from '@/components/TaskCard'
+import TaskCardSkeleton from '@/components/TaskCardSkeleton'
+import QuickFilter, { UrgencyFilter, PriceFilter, TimeFilter } from '@/components/QuickFilter'
+import SortSelector, { SortOption } from '@/components/SortSelector'
 
 export default function FeedPage() {
   const router = useRouter()
@@ -32,6 +22,15 @@ export default function FeedPage() {
   const [error, setError] = useState('')
   const [selectedCity, setSelectedCity] = useState<string>('Астана')
   const [showOnboarding, setShowOnboarding] = useState(false)
+  
+  // Filter states
+  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>('all')
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>('all')
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
+  const [showFilters, setShowFilters] = useState<boolean>(true)
+  
+  // Sort state
+  const [sortOption, setSortOption] = useState<SortOption>('time_desc')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -80,6 +79,74 @@ export default function FeedPage() {
     setSelectedCity(city)
     localStorage.setItem('selected_city', city)
   }
+
+  const handleTaskClaimed = () => {
+    loadTasks()
+  }
+
+  // Filter and sort tasks
+  const filteredAndSortedTasks = useMemo(() => {
+    let filtered = [...tasks]
+
+    // Apply urgency filter
+    if (urgencyFilter !== 'all') {
+      filtered = filtered.filter(task => task.urgency === urgencyFilter)
+    }
+
+    // Apply price filter
+    if (priceFilter !== 'all') {
+      filtered = filtered.filter(task => {
+        switch (priceFilter) {
+          case 'under_1000':
+            return task.reward < 1000
+          case '1000_5000':
+            return task.reward >= 1000 && task.reward <= 5000
+          case 'over_5000':
+            return task.reward > 5000
+          default:
+            return true
+        }
+      })
+    }
+
+    // Apply time filter
+    if (timeFilter !== 'all') {
+      const now = new Date().getTime()
+      filtered = filtered.filter(task => {
+        if (!task.expiresAt) return false
+        const expiresAt = new Date(task.expiresAt).getTime()
+        const diffMinutes = (expiresAt - now) / (1000 * 60)
+        
+        if (timeFilter === 'urgent') {
+          return diffMinutes < 60 // Less than 1 hour
+        } else if (timeFilter === 'expiring_soon') {
+          return diffMinutes < 1440 // Less than 24 hours
+        }
+        return true
+      })
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortOption) {
+        case 'price_desc':
+          return b.reward - a.reward
+        case 'price_asc':
+          return a.reward - b.reward
+        case 'time_desc':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case 'time_asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        case 'urgency_desc':
+          const urgencyOrder = { high: 3, medium: 2, low: 1 }
+          return urgencyOrder[b.urgency] - urgencyOrder[a.urgency]
+        default:
+          return 0
+      }
+    })
+
+    return filtered
+  }, [tasks, urgencyFilter, priceFilter, timeFilter, sortOption])
 
   if (authLoading || !user) {
     return (
@@ -163,6 +230,44 @@ export default function FeedPage() {
           </div>
         )}
 
+        {/* Filters Toggle and Sort Controls */}
+        {!loading && tasks.length > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+              <span>Фильтры</span>
+            </button>
+            <SortSelector value={sortOption} onChange={setSortOption} />
+          </div>
+        )}
+
+        {/* Quick Filters */}
+        {!loading && tasks.length > 0 && showFilters && (
+          <QuickFilter
+            urgencyFilter={urgencyFilter}
+            priceFilter={priceFilter}
+            timeFilter={timeFilter}
+            onUrgencyChange={setUrgencyFilter}
+            onPriceChange={setPriceFilter}
+            onTimeChange={setTimeFilter}
+          />
+        )}
+
         {!loading && tasks.length === 0 && user && (
           <ContextualHint
             hintKey="zero_tasks"
@@ -171,80 +276,38 @@ export default function FeedPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка задач...</p>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <TaskCardSkeleton key={i} />
+            ))}
           </div>
-        ) : tasks.length === 0 ? (
-          <div className="card text-center py-12 md:py-16 px-4">
-            {/* Smaller, lighter icon */}
-            <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gray-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 md:w-10 md:h-10 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        ) : filteredAndSortedTasks.length === 0 ? (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800 text-center py-16 px-4">
+            {/* Larger, more prominent icon */}
+            <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-6 bg-gray-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 md:w-16 md:h-16 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             
-            {/* Compact text with better line-height */}
-            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2 leading-relaxed">
-              {t('emptyStates.feed.title')}
+            {/* Clear, prominent text */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-50 mb-3">
+              {tasks.length === 0 ? t('emptyStates.feed.title') : 'Задачи не найдены'}
             </h2>
-            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-6 leading-relaxed max-w-sm mx-auto">
-              {t('emptyStates.feed.description')}
+            <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
+              {tasks.length === 0 
+                ? t('emptyStates.feed.description')
+                : 'Попробуйте изменить фильтры или выбрать другой город'}
             </p>
             
-            <Link href="/tasks/create" className="btn-primary inline-block w-full md:w-auto">
+            <Link href="/tasks/create" className="btn-primary inline-block px-8 py-3 text-base font-semibold">
               {t('emptyStates.feed.action')}
             </Link>
           </div>
         ) : (
-          <div className="space-y-3 md:space-y-4">
-            {tasks.map((task) => (
-              <Link
-                key={task.id}
-                href={`/tasks/${task.id}`}
-                className="card hover:shadow-md transition-shadow block relative p-4 md:p-6"
-              >
-                {/* Reward at top-right with highlight - Responsive */}
-                <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-primary/10 dark:bg-primary/20 rounded-lg px-2 py-1 md:px-3 md:py-2">
-                  <span className="text-xl md:text-3xl font-bold text-primary dark:text-blue-400">
-                    {task.reward.toLocaleString()} ₸
-                  </span>
-                </div>
-
-                {/* Urgency badge at top-left with icon */}
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  <span className={`px-2.5 md:px-3 py-1.5 rounded-full text-xs md:text-sm font-semibold flex items-center gap-1.5 ${urgencyColors[task.urgency]}`}>
-                    <StopwatchIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    {urgencyLabels[task.urgency]}
-                  </span>
-                  {task.createdBy?.ratingAvg && task.createdBy.ratingAvg > 0 && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
-                      <StarIcon className="w-3 h-3" filled />
-                      {Number(task.createdBy.ratingAvg).toFixed(1)}
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-50 mb-2 pr-20 md:pr-32">{task.shortDescription}</h2>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">{task.fullDescription}</p>
-                
-                {/* Location with icon */}
-                <div className="mb-3 md:mb-4 flex items-center gap-2">
-                  <LocationPinIcon className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
-                    {task.city}, {task.address}
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-3 md:mt-4">
-                  {task.expiresAt && task.status === 'created' && (
-                    <TaskCountdown expiresAt={task.expiresAt} status={task.status} />
-                  )}
-                  <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(task.createdAt).toLocaleDateString('ru-RU')}
-                  </span>
-                </div>
-              </Link>
+          <div className="space-y-4">
+            {filteredAndSortedTasks.map((task) => (
+              <TaskCard key={task.id} task={task} onTaskClaimed={handleTaskClaimed} />
             ))}
           </div>
         )}
