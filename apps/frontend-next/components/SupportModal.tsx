@@ -69,10 +69,10 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
     setSubmitting(true)
 
     try {
-      await supportApi.createRequest({
-        topic: topic as CreateSupportRequestData['topic'],
-        message: message.trim(),
-      })
+      await supportApi.createConversation(
+        topic as CreateSupportRequestData['topic'],
+        message.trim(),
+      )
 
       showToast(t('support.success'), 'success')
       onClose()

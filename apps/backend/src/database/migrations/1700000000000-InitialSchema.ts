@@ -5,9 +5,9 @@ export class InitialSchema1700000000000 implements MigrationInterface {
     // Enable PostGIS extension
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS postgis;`);
 
-    // Create users table
+    // Create users table (only if it doesn't exist)
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "email" character varying NOT NULL,
         "password" character varying NOT NULL,
@@ -19,9 +19,9 @@ export class InitialSchema1700000000000 implements MigrationInterface {
       )
     `);
 
-    // Create tasks table with PostGIS geometry
+    // Create tasks table with PostGIS geometry (only if it doesn't exist)
     await queryRunner.query(`
-      CREATE TABLE "tasks" (
+      CREATE TABLE IF NOT EXISTS "tasks" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "shortDescription" character varying NOT NULL,
         "fullDescription" text NOT NULL,
@@ -40,41 +40,55 @@ export class InitialSchema1700000000000 implements MigrationInterface {
       )
     `);
 
-    // Create indexes
+    // Create indexes (only if they don't exist)
     await queryRunner.query(`
-      CREATE INDEX "IDX_tasks_createdById" ON "tasks" ("createdById")
+      CREATE INDEX IF NOT EXISTS "IDX_tasks_createdById" ON "tasks" ("createdById")
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "IDX_tasks_claimedById" ON "tasks" ("claimedById")
+      CREATE INDEX IF NOT EXISTS "IDX_tasks_claimedById" ON "tasks" ("claimedById")
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "IDX_tasks_status" ON "tasks" ("status")
+      CREATE INDEX IF NOT EXISTS "IDX_tasks_status" ON "tasks" ("status")
     `);
 
     await queryRunner.query(`
-      CREATE INDEX "IDX_tasks_expiresAt" ON "tasks" ("expiresAt")
+      CREATE INDEX IF NOT EXISTS "IDX_tasks_expiresAt" ON "tasks" ("expiresAt")
     `);
 
-    // Create spatial index for geoPoint
+    // Create spatial index for geoPoint (only if it doesn't exist)
     await queryRunner.query(`
-      CREATE INDEX "IDX_tasks_geoPoint" ON "tasks" USING GIST ("geoPoint")
+      CREATE INDEX IF NOT EXISTS "IDX_tasks_geoPoint" ON "tasks" USING GIST ("geoPoint")
     `);
 
-    // Add foreign keys
+    // Add foreign keys (only if they don't exist)
     await queryRunner.query(`
-      ALTER TABLE "tasks"
-      ADD CONSTRAINT "FK_tasks_createdBy"
-      FOREIGN KEY ("createdById") REFERENCES "users"("id")
-      ON DELETE CASCADE
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'FK_tasks_createdBy'
+        ) THEN
+          ALTER TABLE "tasks"
+          ADD CONSTRAINT "FK_tasks_createdBy"
+          FOREIGN KEY ("createdById") REFERENCES "users"("id")
+          ON DELETE CASCADE;
+        END IF;
+      END $$;
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "tasks"
-      ADD CONSTRAINT "FK_tasks_claimedBy"
-      FOREIGN KEY ("claimedById") REFERENCES "users"("id")
-      ON DELETE SET NULL
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'FK_tasks_claimedBy'
+        ) THEN
+          ALTER TABLE "tasks"
+          ADD CONSTRAINT "FK_tasks_claimedBy"
+          FOREIGN KEY ("claimedById") REFERENCES "users"("id")
+          ON DELETE SET NULL;
+        END IF;
+      END $$;
     `);
   }
 

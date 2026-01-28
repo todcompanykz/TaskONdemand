@@ -17,7 +17,27 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Improve text rendering for all elements */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure sharp text rendering on high DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body,
+  * {
+    -webkit-font-smoothing: subpixel-antialiased;
+    text-rendering: optimizeLegibility;
+  }
 }
 
 /* Trust-based design: clean, simple, readable */
@@ -52,6 +72,11 @@ body {
 
 .card {
   @apply bg-white dark:bg-slate-900 rounded-2xl shadow-sm hover:shadow-lg border border-gray-200 dark:border-slate-800 p-6 transition-all duration-200;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .input {

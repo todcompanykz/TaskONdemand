@@ -62,14 +62,39 @@ export class FCMService {
     userId: string,
     payload: FCMNotificationPayload,
   ): Promise<boolean> {
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:entry',message:'sendNotification called',data:{userId,title:payload.title,hasFirebaseApp:!!this.firebaseApp},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+    } catch(e) {}
+    this.logger.log(`[DEBUG] sendNotification called: userId=${userId}, hasFirebaseApp=${!!this.firebaseApp}`);
+    // #endregion
+
     if (!this.firebaseApp) {
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:noFirebase',message:'Firebase not initialized',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+      } catch(e) {}
+      // #endregion
       this.logger.warn('Firebase not initialized. Cannot send notification.');
       return false;
     }
 
     try {
       const user = await this.usersRepository.findOne({ where: { id: userId } });
+      
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:userFound',message:'user lookup result',data:{userId,userFound:!!user,hasFcmToken:!!user?.fcmToken,fcmTokenLength:user?.fcmToken?.length || 0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+      } catch(e) {}
+      this.logger.log(`[DEBUG] User lookup: found=${!!user}, hasFcmToken=${!!user?.fcmToken}`);
+      // #endregion
+
       if (!user || !user.fcmToken) {
+        // #region agent log
+        try {
+          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:noToken',message:'user has no FCM token',data:{userId,userFound:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+        } catch(e) {}
+        // #endregion
         this.logger.debug(`User ${userId} has no FCM token`);
         return false;
       }
@@ -97,9 +122,22 @@ export class FCMService {
       };
 
       const response = await admin.messaging().send(message);
+      
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:success',message:'FCM notification sent successfully',data:{userId,response},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+      } catch(e) {}
+      // #endregion
+      
       this.logger.log(`Successfully sent FCM notification to user ${userId}: ${response}`);
       return true;
     } catch (error) {
+      // #region agent log
+      try {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'fcm.service.ts:sendNotification:error',message:'FCM notification failed',data:{userId,errorCode:error?.code,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'K'})}).catch(()=>{});
+      } catch(e) {}
+      // #endregion
+      
       this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
       
       // If token is invalid, remove it from database

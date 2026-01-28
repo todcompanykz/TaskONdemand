@@ -4,19 +4,14 @@ import {
   ExecutionContext,
   ForbiddenException,
 } from '@nestjs/common';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 /**
- * Admin Guard - checks if user is admin
- * For MVP: checks if email contains 'admin' or is in admin list
+ * Admin Guard - checks if user is ADMIN or SUPER_ADMIN
+ * Both roles can access endpoints protected by this guard
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
-  // List of admin emails (can be moved to env/config)
-  private readonly adminEmails = [
-    'admin@tod.kz',
-    'admin@example.com',
-  ];
-
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
@@ -25,11 +20,9 @@ export class AdminGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Check if email is in admin list or contains 'admin'
+    // Check if user has ADMIN or SUPER_ADMIN role
     const isAdmin =
-      this.adminEmails.includes(user.email.toLowerCase()) ||
-      user.email.toLowerCase().includes('@admin.') ||
-      user.email.toLowerCase().startsWith('admin@');
+      user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
 
     if (!isAdmin) {
       throw new ForbiddenException('Admin access required');

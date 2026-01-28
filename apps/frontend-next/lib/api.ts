@@ -36,6 +36,15 @@ api.interceptors.request.use(
     // Dynamically compute API URL on EVERY request (fixes SSR caching issue)
     const apiUrl = getApiUrl()
     config.baseURL = apiUrl
+
+    // #region agent log
+    try {
+      const url = typeof config.url === 'string' ? config.url : ''
+      if (url.includes('/support')) {
+        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:requestInterceptor:support',message:'Support request from frontend',data:{method:config.method,url,baseURL:config.baseURL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+      }
+    } catch (e) {}
+    // #endregion
     
     const token = localStorage.getItem('token')
     if (token) {
@@ -73,6 +82,8 @@ export interface User {
   createdAt?: string
   updatedAt?: string
   isAdmin?: boolean // Computed on frontend based on email
+  role?: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
+  permissions?: string[]
   isRestricted?: boolean
   cancelCount?: number
   refuseCount?: number
@@ -313,6 +324,51 @@ export const adminApi = {
     const { data } = await api.post(`/admin/support/${requestId}/reply`, { message })
     return data
   },
+  // Super Admin endpoints
+  getAdminTokens: async () => {
+    const { data } = await api.get('/admin/tokens')
+    return data
+  },
+  createAdminToken: async (permissions: string[], expiresAt?: string, assignedToUserId?: string) => {
+    const { data } = await api.post('/admin/tokens', { permissions, expiresAt, assignedToUserId })
+    return data
+  },
+  revokeAdminToken: async (tokenId: string) => {
+    const { data } = await api.post(`/admin/tokens/${tokenId}/revoke`)
+    return data
+  },
+  getAdmins: async () => {
+    const { data } = await api.get('/admin/admins')
+    return data
+  },
+  activateAdminToken: async (token: string) => {
+    const { data } = await api.post('/admin/tokens/activate', { token })
+    return data
+  },
+  // Support conversations (admin)
+  getSupportConversations: async (filters?: { status?: string; priority?: string }): Promise<SupportConversation[]> => {
+    const params = new URLSearchParams()
+    if (filters?.status) params.append('status', filters.status)
+    if (filters?.priority) params.append('priority', filters.priority)
+    const { data } = await api.get(`/admin/support/conversations?${params.toString()}`)
+    return data
+  },
+  getSupportConversation: async (id: string): Promise<SupportConversation> => {
+    const { data } = await api.get(`/admin/support/conversations/${id}`)
+    return data
+  },
+  sendSupportMessage: async (conversationId: string, message: string): Promise<SupportMessage> => {
+    const { data } = await api.post('/admin/support/messages', { conversationId, message })
+    return data
+  },
+  closeSupportConversation: async (id: string): Promise<SupportConversation> => {
+    const { data } = await api.post(`/admin/support/conversations/${id}/close`)
+    return data
+  },
+  updateSupportConversation: async (id: string, updates: { status?: string; priority?: string }): Promise<SupportConversation> => {
+    const { data } = await api.post(`/admin/support/conversations/${id}/update`, updates)
+    return data
+  },
 }
 
 export interface CreateSupportRequestData {
@@ -338,9 +394,50 @@ export interface SupportRequest {
   createdAt: string
 }
 
+export interface SupportConversation {
+  id: string
+  userId: string
+  user?: {
+    id: string
+    email: string
+    firstName?: string
+    lastName?: string
+  }
+  topic: 'task_issue' | 'account_access' | 'restriction_block' | 'other'
+  status: 'open' | 'closed'
+  priority: 'low' | 'normal' | 'high'
+  createdAt: string
+  updatedAt: string
+  lastMessageAt?: string | null
+  messages?: SupportMessage[]
+}
+
+export interface SupportMessage {
+  id: string
+  conversationId: string
+  senderId: string
+  sender?: {
+    id: string
+    email: string
+    firstName?: string
+    lastName?: string
+  }
+  senderRole: 'USER' | 'ADMIN'
+  message: string
+  isRead: boolean
+  createdAt: string
+}
+
 export const supportApi = {
+  // Legacy endpoints (backward compatibility)
+  // NOTE: This endpoint is deprecated. Use createConversation instead.
   createRequest: async (data: CreateSupportRequestData) => {
-    const { data: response } = await api.post('/support', data)
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:createRequest:entry',message:'supportApi.createRequest called',data:{topic:data.topic,messageLength:data.message?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+    } catch (e) {}
+    // #endregion
+    const { data: response } = await api.post('/support/requests', data)
     return response
   },
   getAllRequests: async (): Promise<SupportRequest[]> => {
@@ -349,6 +446,28 @@ export const supportApi = {
   },
   getMySupportRequests: async (): Promise<SupportRequest[]> => {
     const { data } = await api.get('/support/my-requests')
+    return data
+  },
+  // New conversation-based endpoints
+  createConversation: async (topic: string, message: string): Promise<SupportConversation> => {
+    // #region agent log
+    try {
+      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:createConversation:entry',message:'supportApi.createConversation called',data:{topic,messageLength:message?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+    } catch (e) {}
+    // #endregion
+    const { data } = await api.post('/support/conversations', { topic, message })
+    return data
+  },
+  getConversations: async (): Promise<SupportConversation[]> => {
+    const { data } = await api.get('/support/conversations')
+    return data
+  },
+  getConversation: async (id: string): Promise<SupportConversation> => {
+    const { data } = await api.get(`/support/conversations/${id}`)
+    return data
+  },
+  sendMessage: async (conversationId: string, message: string): Promise<SupportMessage> => {
+    const { data } = await api.post('/support/messages', { conversationId, message })
     return data
   },
 }

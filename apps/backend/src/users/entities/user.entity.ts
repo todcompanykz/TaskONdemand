@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Task } from '../../tasks/entities/task.entity';
 import { Review } from '../../reviews/entities/review.entity';
+import { UserRole } from '../../common/enums/user-role.enum';
 
 @Entity('users')
 export class User {
@@ -40,6 +41,16 @@ export class User {
 
   @Column({ nullable: true, type: 'text' })
   fcmToken: string | null; // Firebase Cloud Messaging token for push notifications
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
+
+  @Column({ type: 'jsonb', default: [] })
+  permissions: string[];
 
   @CreateDateColumn()
   createdAt: Date;

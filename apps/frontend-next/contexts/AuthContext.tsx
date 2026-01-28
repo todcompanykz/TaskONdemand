@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   isAdmin: boolean
+  isSuperAdmin: boolean
   login: (email: string, password: string) => Promise<void>
   register: (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => Promise<void>
   logout: () => void
@@ -14,15 +15,26 @@ interface AuthContextType {
 }
 
 // Helper function to check if user is admin
-function checkIsAdmin(email: string | undefined): boolean {
-  if (!email) return false
-  const emailLower = email.toLowerCase()
+function checkIsAdmin(user: User | null): boolean {
+  if (!user) return false
+  // Check role from backend (preferred)
+  if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+    return true
+  }
+  // Fallback to email-based check for backward compatibility
+  const emailLower = user.email?.toLowerCase() || ''
   return (
     emailLower.includes('@admin.') ||
     emailLower.startsWith('admin@') ||
     emailLower === 'admin@tod.kz' ||
     emailLower === 'admin@example.com'
   )
+}
+
+// Helper function to check if user is super admin
+function checkIsSuperAdmin(user: User | null): boolean {
+  if (!user) return false
+  return user.role === 'SUPER_ADMIN'
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -117,10 +129,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const isAdmin = checkIsAdmin(user?.email)
+  const isAdmin = checkIsAdmin(user)
+  const isSuperAdmin = checkIsSuperAdmin(user)
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, isSuperAdmin, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

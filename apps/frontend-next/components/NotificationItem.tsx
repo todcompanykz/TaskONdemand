@@ -243,6 +243,7 @@ const getNotificationSubtitle = (
     user_blocked: 'userBlocked',
     claim_blocked: 'claimBlocked',
     support_reply: 'supportReply',
+    support_message: 'supportReply',
   }
 
   const key = typeToKey[type]

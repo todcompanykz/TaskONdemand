@@ -6,6 +6,9 @@ import { Task } from '../tasks/entities/task.entity';
 import { Review } from '../reviews/entities/review.entity';
 import { UserNotificationSettings } from '../users/entities/user-notification-settings.entity';
 import { SupportRequest } from '../support/entities/support-request.entity';
+import { SupportConversation } from '../support/entities/support-conversation.entity';
+import { SupportMessage } from '../support/entities/support-message.entity';
+import { AdminAccessToken } from '../admin/entities/admin-access-token.entity';
 
 @Module({
   imports: [
@@ -18,7 +21,16 @@ import { SupportRequest } from '../support/entities/support-request.entity';
         username: configService.get('DB_USERNAME', 'postgres'),
         password: configService.get('DB_PASSWORD', 'postgres'),
         database: configService.get('DB_NAME', 'tod'),
-        entities: [User, Task, Review, UserNotificationSettings, SupportRequest],
+        entities: [
+          User,
+          Task,
+          Review,
+          UserNotificationSettings,
+          SupportRequest,
+          SupportConversation,
+          SupportMessage,
+          AdminAccessToken,
+        ],
         synchronize: configService.get('NODE_ENV') !== 'production',
         logging: configService.get('NODE_ENV') === 'development',
         extra: {

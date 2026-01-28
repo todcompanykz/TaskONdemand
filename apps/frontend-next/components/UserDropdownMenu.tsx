@@ -163,22 +163,7 @@ export default function UserDropdownMenu() {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    sessionId: 'debug-session',
-                    runId: 'run1',
-                    hypothesisId: 'H3',
-                    location: 'apps/frontend-next/components/UserDropdownMenu.tsx:account-click',
-                    message: 'account_settings_clicked',
-                    data: { userId: user?.id },
-                    timestamp: Date.now(),
-                  }),
-                }).catch(() => {})
-                // #endregion
-                router.push('/settings/account')
+                router.push('/settings')
                 setIsOpen(false)
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors relative group focus:outline-none focus:bg-gray-100 dark:focus:bg-slate-800"
@@ -201,7 +186,7 @@ export default function UserDropdownMenu() {
                   id="XMLID_1645_"
                 />
               </svg>
-              <span>{t('profile.account')}</span>
+              <span>{t('settings.title')}</span>
             </button>
 
             <button

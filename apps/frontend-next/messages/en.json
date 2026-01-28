@@ -41,7 +41,8 @@
     "feed": "Feed",
     "createTask": "Create task",
     "myTasks": "My tasks",
-    "admin": "Admin"
+    "admin": "Admin",
+    "profile": "Profile"
   },
   "feed": {
     "title": "Tasks in {city}",
@@ -174,6 +175,10 @@
     "notifications": "Notifications"
   },
   "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "appearance": "Appearance",
+    "supportChat": "Chat with support",
     "account": {
       "title": "Account Settings",
       "description": "Manage your account's basic information",

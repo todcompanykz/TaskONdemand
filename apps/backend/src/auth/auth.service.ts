@@ -63,7 +63,17 @@ export class AuthService {
     } catch(e) {}
     // #endregion
 
-    const payload = { sub: user.id, email: user.email };
+    // Reload user to get role and permissions
+    const savedUser = await this.usersRepository.findOne({
+      where: { id: user.id },
+    });
+
+    const payload = {
+      sub: savedUser.id,
+      email: savedUser.email,
+      role: savedUser.role,
+      permissions: savedUser.permissions || [],
+    };
     const accessToken = this.jwtService.sign(payload);
 
     return { accessToken, user };
@@ -113,12 +123,24 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      permissions: user.permissions || [],
+    };
     const accessToken = this.jwtService.sign(payload);
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:95',message:'Login success',data:{userId:user.id,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
+      const logEntry = JSON.stringify({location:'auth.service.ts:126',message:'Login JWT payload created',data:{userId:user.id,email:user.email,role:user.role,permissions:user.permissions,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
+
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:134',message:'Login success',data:{userId:user.id,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
       fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
     } catch(e) {}
     // #endregion
@@ -126,15 +148,43 @@ export class AuthService {
     return { accessToken, user };
   }
 
-  async validateUser(userId: string): Promise<User> {
+  async validateUser(userId: string): Promise<User & { role: string; permissions: string[] }> {
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:144',message:'validateUser entry',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
+
     const user = await this.usersRepository.findOne({
       where: { id: userId },
     });
+
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:151',message:'validateUser user loaded',data:{userFound:!!user,userId:user?.id,email:user?.email,role:user?.role,permissions:user?.permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
 
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    return user;
+    // Return user with role and permissions
+    const result = {
+      ...user,
+      role: user.role,
+      permissions: user.permissions || [],
+    };
+
+    // #region agent log
+    try {
+      const logEntry = JSON.stringify({location:'auth.service.ts:165',message:'validateUser returning',data:{userId:result.id,role:result.role,permissions:result.permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
+      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
+    } catch(e) {}
+    // #endregion
+
+    return result;
   }
 }

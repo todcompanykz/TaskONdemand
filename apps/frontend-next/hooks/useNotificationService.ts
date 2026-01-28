@@ -18,6 +18,7 @@ export type NotificationType =
   | 'task_completed'
   | 'task_expired'
   | 'support_reply'
+  | 'support_message'
   | 'work_confirmed'
   | 'payment_confirmed'
 
@@ -69,6 +70,7 @@ export function useNotificationService(): NotificationService {
         case 'payment_confirmed':
           return settings.taskStatusChange
         case 'support_reply':
+        case 'support_message':
           return settings.supportReplies ?? true
         default:
           return true
@@ -327,31 +329,40 @@ export function useNotificationService(): NotificationService {
 
     try {
       const settings = await getNotificationSettings()
-      if (!shouldShowNotification('support_reply', settings)) {
+      if (!shouldShowNotification('support_message', settings)) {
         return
       }
 
-      const requests = await supportApi.getMySupportRequests()
-      const storedRequestsKey = `support_requests_${user.id}`
-      const storedRequests = JSON.parse(
-        localStorage.getItem(storedRequestsKey) || '{}',
-      ) as Record<string, { answeredAt: string | null }>
+      // Check new conversation messages
+      const conversations = await supportApi.getConversations()
+      const storedMessagesKey = `support_messages_${user.id}`
+      const storedMessages = JSON.parse(
+        localStorage.getItem(storedMessagesKey) || '{}',
+      ) as Record<string, { lastMessageId: string | null; lastCheckedAt: string }>
 
-      for (const request of requests) {
-        if (request.status === 'answered' && request.answeredAt) {
-          const stored = storedRequests[request.id]
-          const storedAnsweredAt = stored?.answeredAt || null
-          const currentAnsweredAt = request.answeredAt
+      for (const conversation of conversations) {
+        if (!conversation.messages || conversation.messages.length === 0) continue
 
-          if (storedAnsweredAt !== currentAnsweredAt) {
-            const notificationId = `support_reply_${request.id}`
-            if (!isNotificationShown('support_reply', request.id)) {
+        // Get unread admin messages (new messages from support)
+        const adminMessages = conversation.messages.filter(
+          (m) => m.senderRole === 'ADMIN' && !m.isRead,
+        )
+
+        if (adminMessages.length > 0) {
+          const stored = storedMessages[conversation.id]
+          const lastStoredMessageId = stored?.lastMessageId || null
+          const latestMessage = adminMessages[adminMessages.length - 1]
+
+          // Check if this is a new message
+          if (lastStoredMessageId !== latestMessage.id) {
+            const notificationId = `support_message_${conversation.id}_${latestMessage.id}`
+            if (!isNotificationShown('support_message', `${conversation.id}_${latestMessage.id}`)) {
               const message = t('notifications.supportReply.message', {
-                message: request.responseMessage || '',
+                message: latestMessage.message.substring(0, 100) + (latestMessage.message.length > 100 ? '...' : ''),
               })
               addNotification({
                 id: notificationId,
-                type: 'support_reply',
+                type: 'support_message',
                 title: t('notificationHistory.titles.supportReply'),
                 message,
                 timestamp: Date.now(),
@@ -359,30 +370,38 @@ export function useNotificationService(): NotificationService {
               showToast(message, 'info', 10000, {
                 label: t('notifications.supportReply.action'),
                 onClick: () => {
-                  // Could navigate to support history if we add that page
+                  window.location.href = `/support?conversation=${conversation.id}`
                 },
               })
-              markNotificationShown('support_reply', request.id)
+              markNotificationShown('support_message', `${conversation.id}_${latestMessage.id}`)
             }
 
-            // Update stored answeredAt
-            storedRequests[request.id] = { answeredAt: currentAnsweredAt }
+            // Update stored message ID
+            storedMessages[conversation.id] = {
+              lastMessageId: latestMessage.id,
+              lastCheckedAt: new Date().toISOString(),
+            }
           } else if (!stored) {
-            // First time seeing this request, store it
-            storedRequests[request.id] = { answeredAt: currentAnsweredAt }
+            // First time seeing this conversation, store it
+            storedMessages[conversation.id] = {
+              lastMessageId: latestMessage.id,
+              lastCheckedAt: new Date().toISOString(),
+            }
           }
-        } else {
-          // Request is open, store it without answeredAt
-          if (!storedRequests[request.id]) {
-            storedRequests[request.id] = { answeredAt: null }
+        } else if (!storedMessages[conversation.id]) {
+          // No unread messages, but store conversation
+          const lastMessage = conversation.messages[conversation.messages.length - 1]
+          storedMessages[conversation.id] = {
+            lastMessageId: lastMessage?.id || null,
+            lastCheckedAt: new Date().toISOString(),
           }
         }
       }
 
-      // Save updated stored requests
-      localStorage.setItem(storedRequestsKey, JSON.stringify(storedRequests))
+      // Save updated stored messages
+      localStorage.setItem(storedMessagesKey, JSON.stringify(storedMessages))
     } catch (error) {
-      console.error('Failed to check support replies:', error)
+      console.error('Failed to check support messages:', error)
     }
   }, [
     user?.id,

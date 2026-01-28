@@ -1,10 +1,25 @@
 #!/bin/bash
 # Script to configure pg_hba.conf for PostgreSQL 18
+# This script is optional and will gracefully skip if pg_hba.conf is not found
 
-PG_HBA_FILE="/var/lib/postgresql/18/docker/pg_hba.conf"
+set -e
+
+# Find pg_hba.conf in PostgreSQL 18 data directory
+PG_HBA_FILE=""
+for path in "/var/lib/postgresql/data/pg_hba.conf" "/var/lib/postgresql/18/data/pg_hba.conf"; do
+  if [ -f "$path" ]; then
+    PG_HBA_FILE="$path"
+    break
+  fi
+done
+
+if [ -z "$PG_HBA_FILE" ]; then
+  echo "Warning: pg_hba.conf not found, skipping configuration"
+  exit 0
+fi
 
 # Backup original file
-cp "$PG_HBA_FILE" "${PG_HBA_FILE}.backup"
+cp "$PG_HBA_FILE" "${PG_HBA_FILE}.backup" || true
 
 # Create new pg_hba.conf with proper authentication
 cat > "$PG_HBA_FILE" <<EOF
@@ -31,7 +46,7 @@ host    replication     all             127.0.0.1/32            trust
 host    replication     all             ::1/128                 trust
 EOF
 
-# Reload configuration
-psql -U postgres -c "SELECT pg_reload_conf();" || true
+# Reload configuration (if PostgreSQL is running)
+psql -U postgres -c "SELECT pg_reload_conf();" 2>/dev/null || true
 
 echo "pg_hba.conf configured successfully"
