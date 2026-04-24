@@ -1,5 +1,6 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
+import * as path from 'path';
 import { User } from '../users/entities/user.entity';
 import { Task } from '../tasks/entities/task.entity';
 import { Review } from '../reviews/entities/review.entity';
@@ -11,12 +12,10 @@ import { AdminAccessToken } from '../admin/entities/admin-access-token.entity';
 
 config();
 
-// Determine migration paths based on environment
-// In development, use .ts files, in production use compiled .js files
-const isProduction = process.env.NODE_ENV === 'production';
-const migrationsPath = isProduction
-  ? ['dist/database/migrations/*.js']
-  : ['src/database/migrations/*.ts'];
+// Use paths relative to this file, so it works in both:
+// - ts-node dev: .../src/database (migrations are .ts)
+// - compiled prod: .../dist/**/database (migrations are .js)
+const migrationsPath = [path.join(__dirname, 'migrations', '*.{ts,js}')];
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',

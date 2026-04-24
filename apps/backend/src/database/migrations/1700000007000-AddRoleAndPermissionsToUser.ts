@@ -11,22 +11,26 @@ export class AddRoleAndPermissionsToUser1700000007000 implements MigrationInterf
       END $$;
     `);
 
-    // Add role column
-    const roleColumn = new TableColumn({
-      name: 'role',
-      type: 'enum',
-      enum: ['USER', 'ADMIN', 'SUPER_ADMIN'],
-      default: "'USER'",
-    });
-    await queryRunner.addColumn('users', roleColumn);
+    const roleExists = await queryRunner.hasColumn('users', 'role');
+    if (!roleExists) {
+      const roleColumn = new TableColumn({
+        name: 'role',
+        type: 'enum',
+        enum: ['USER', 'ADMIN', 'SUPER_ADMIN'],
+        default: "'USER'",
+      });
+      await queryRunner.addColumn('users', roleColumn);
+    }
 
-    // Add permissions column
-    const permissionsColumn = new TableColumn({
-      name: 'permissions',
-      type: 'jsonb',
-      default: "'[]'",
-    });
-    await queryRunner.addColumn('users', permissionsColumn);
+    const permissionsExists = await queryRunner.hasColumn('users', 'permissions');
+    if (!permissionsExists) {
+      const permissionsColumn = new TableColumn({
+        name: 'permissions',
+        type: 'jsonb',
+        default: "'[]'",
+      });
+      await queryRunner.addColumn('users', permissionsColumn);
+    }
 
     // Migrate existing admins to SUPER_ADMIN
     // List of admin emails from old AdminGuard
@@ -61,8 +65,14 @@ export class AddRoleAndPermissionsToUser1700000007000 implements MigrationInterf
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropColumn('users', 'permissions');
-    await queryRunner.dropColumn('users', 'role');
+    const permissionsExists = await queryRunner.hasColumn('users', 'permissions');
+    if (permissionsExists) {
+      await queryRunner.dropColumn('users', 'permissions');
+    }
+    const roleExists = await queryRunner.hasColumn('users', 'role');
+    if (roleExists) {
+      await queryRunner.dropColumn('users', 'role');
+    }
     await queryRunner.query(`DROP TYPE IF EXISTS "user_role_enum"`);
   }
 }

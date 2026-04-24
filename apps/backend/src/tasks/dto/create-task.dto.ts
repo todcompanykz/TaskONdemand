@@ -8,6 +8,9 @@ import {
   ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  IsOptional,
+  IsArray,
+  ArrayMaxSize,
 } from 'class-validator';
 import { TaskUrgency } from '../entities/task.entity';
 
@@ -45,4 +48,10 @@ export class CreateTaskDto {
 
   @IsEnum(TaskUrgency)
   urgency: TaskUrgency;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5)
+  @IsString({ each: true })
+  photoUrls?: string[];
 }

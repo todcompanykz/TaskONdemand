@@ -31,7 +31,8 @@ import { AdminAccessToken } from '../admin/entities/admin-access-token.entity';
           SupportMessage,
           AdminAccessToken,
         ],
-        synchronize: configService.get('NODE_ENV') !== 'production',
+        // Use migrations only; synchronize can break schema in non-empty databases.
+        synchronize: false,
         logging: configService.get('NODE_ENV') === 'development',
         extra: {
           // Enable PostGIS extension

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -21,9 +22,6 @@ export class TasksController {
 
   @Post()
   async create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks.controller.ts:create:entry',message:'create task called',data:{receivedDto:createTaskDto,hasLongitude:'longitude' in createTaskDto,hasLatitude:'latitude' in createTaskDto,hasCity:'city' in createTaskDto,hasAddress:'address' in createTaskDto},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     return this.tasksService.create(createTaskDto, req.user.id);
   }
 
@@ -72,5 +70,10 @@ export class TasksController {
   @Post(':id/confirm-payment')
   async confirmPaymentReceived(@Param('id') id: string, @Request() req) {
     return this.tasksService.confirmPaymentReceived(id, req.user.id);
+  }
+
+  @Delete(':id')
+  async deleteOwnTask(@Param('id') id: string, @Request() req) {
+    return this.tasksService.deleteOwnTask(id, req.user.id);
   }
 }

@@ -18,6 +18,7 @@ describe('TasksService - Atomic Claim Logic', () => {
     id: 'task-1',
     shortDescription: 'Test Task',
     fullDescription: 'Test Description',
+    photoUrls: [],
     reward: 1000,
     city: 'Астана',
     address: 'Test Address',

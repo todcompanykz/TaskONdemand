@@ -1,0 +1,47 @@
+pipeline {
+  agent any
+
+  environment {
+    COMPOSE_FILE = "infra/docker/docker-compose.base.yml"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install') {
+      steps {
+        sh 'npm ci'
+      }
+    }
+
+    stage('Backend tests') {
+      steps {
+        sh 'npm run test --workspace=apps/backend'
+      }
+    }
+
+    stage('Build docker images') {
+      steps {
+        sh 'docker compose -f $COMPOSE_FILE build backend frontend'
+      }
+    }
+
+    stage('Smoke check') {
+      steps {
+        sh 'docker compose -f $COMPOSE_FILE up -d postgres redis backend frontend'
+        sh 'sleep 20'
+        sh 'curl -f http://localhost:3001/health'
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker compose -f $COMPOSE_FILE down'
+    }
+  }
+}

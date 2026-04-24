@@ -1,0 +1,28 @@
+{
+  "title": "TaskOnDemand Overview",
+  "uid": "tod-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Backend Up",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "up{job=\"backend\"}", "refId": "A" }
+      ],
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Container CPU",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "rate(container_cpu_usage_seconds_total[2m])", "refId": "A" }
+      ],
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 0 }
+    }
+  ]
+}

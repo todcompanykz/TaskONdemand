@@ -14,6 +14,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
       interval: 10s

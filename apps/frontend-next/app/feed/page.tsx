@@ -28,6 +28,12 @@ export default function FeedPage() {
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all')
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all')
   const [showFilters, setShowFilters] = useState<boolean>(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [withPhotoOnly, setWithPhotoOnly] = useState(false)
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [favoriteTaskIds, setFavoriteTaskIds] = useState<string[]>([])
+  const [priceMin, setPriceMin] = useState('')
+  const [priceMax, setPriceMax] = useState('')
   
   // Sort state
   const [sortOption, setSortOption] = useState<SortOption>('time_desc')
@@ -59,6 +65,17 @@ export default function FeedPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity, user])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('favorite_task_ids')
+    if (saved) {
+      try {
+        setFavoriteTaskIds(JSON.parse(saved))
+      } catch {
+        setFavoriteTaskIds([])
+      }
+    }
+  }, [])
 
   const loadTasks = async () => {
     if (!user) return
@@ -126,6 +143,40 @@ export default function FeedPage() {
       })
     }
 
+    // Free text search (title/description/address)
+    if (searchQuery.trim()) {
+      const normalized = searchQuery.trim().toLowerCase()
+      filtered = filtered.filter((task) => {
+        return (
+          task.shortDescription.toLowerCase().includes(normalized) ||
+          task.fullDescription.toLowerCase().includes(normalized) ||
+          task.address.toLowerCase().includes(normalized)
+        )
+      })
+    }
+
+    if (withPhotoOnly) {
+      filtered = filtered.filter((task) => (task.photoUrls?.length ?? 0) > 0)
+    }
+
+    if (favoritesOnly) {
+      filtered = filtered.filter((task) => favoriteTaskIds.includes(task.id))
+    }
+
+    if (priceMin.trim()) {
+      const min = Number(priceMin)
+      if (!Number.isNaN(min)) {
+        filtered = filtered.filter((task) => task.reward >= min)
+      }
+    }
+
+    if (priceMax.trim()) {
+      const max = Number(priceMax)
+      if (!Number.isNaN(max)) {
+        filtered = filtered.filter((task) => task.reward <= max)
+      }
+    }
+
     // Apply sorting
     filtered.sort((a, b) => {
       switch (sortOption) {
@@ -146,7 +197,46 @@ export default function FeedPage() {
     })
 
     return filtered
-  }, [tasks, urgencyFilter, priceFilter, timeFilter, sortOption])
+  }, [
+    tasks,
+    urgencyFilter,
+    priceFilter,
+    timeFilter,
+    sortOption,
+    searchQuery,
+    withPhotoOnly,
+    favoritesOnly,
+    favoriteTaskIds,
+    priceMin,
+    priceMax,
+  ])
+
+  const resetFilters = () => {
+    setUrgencyFilter('all')
+    setPriceFilter('all')
+    setTimeFilter('all')
+    setSortOption('time_desc')
+    setSearchQuery('')
+    setWithPhotoOnly(false)
+    setFavoritesOnly(false)
+    setPriceMin('')
+    setPriceMax('')
+  }
+
+  const applyPricePreset = (min: number | null, max: number | null) => {
+    setPriceMin(min === null ? '' : String(min))
+    setPriceMax(max === null ? '' : String(max))
+  }
+
+  const toggleFavoriteTask = (taskId: string) => {
+    setFavoriteTaskIds((prev) => {
+      const next = prev.includes(taskId)
+        ? prev.filter((id) => id !== taskId)
+        : [...prev, taskId]
+      localStorage.setItem('favorite_task_ids', JSON.stringify(next))
+      return next
+    })
+  }
 
   if (authLoading || !user) {
     return (
@@ -166,7 +256,7 @@ export default function FeedPage() {
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
-      <div className="max-w-screen-md mx-auto px-4 md:px-6 py-4 md:py-8">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-4 md:py-8">
         {/* City Filter - Search Bar Style */}
         <div className="mb-6">
           <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm">
@@ -232,40 +322,113 @@ export default function FeedPage() {
 
         {/* Filters Toggle and Sort Controls */}
         {!loading && tasks.length > 0 && (
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+          <div className="mb-4 space-y-3">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.6-4.4a6 6 0 11-12 0 6 6 0 0112 0z" />
               </svg>
-              <span>Фильтры</span>
-            </button>
-            <SortSelector value={sortOption} onChange={setSortOption} />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск по названию, описанию, адресу"
+                className="w-full bg-transparent text-sm outline-none text-gray-900 dark:text-gray-50 placeholder:text-gray-400"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+                <span>Фильтры</span>
+              </button>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs md:text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={withPhotoOnly}
+                    onChange={(e) => setWithPhotoOnly(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Только с фото
+                </label>
+                <label className="flex items-center gap-2 text-xs md:text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={favoritesOnly}
+                    onChange={(e) => setFavoritesOnly(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Избранное
+                </label>
+                <button
+                  onClick={resetFilters}
+                  className="px-3 py-2 text-xs md:text-sm rounded-lg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800"
+                >
+                  Сбросить
+                </button>
+                <SortSelector value={sortOption} onChange={setSortOption} />
+              </div>
+            </div>
           </div>
         )}
 
         {/* Quick Filters */}
         {!loading && tasks.length > 0 && showFilters && (
-          <QuickFilter
-            urgencyFilter={urgencyFilter}
-            priceFilter={priceFilter}
-            timeFilter={timeFilter}
-            onUrgencyChange={setUrgencyFilter}
-            onPriceChange={setPriceFilter}
-            onTimeChange={setTimeFilter}
-          />
+          <div className="mb-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
+            <QuickFilter
+              urgencyFilter={urgencyFilter}
+              priceFilter={priceFilter}
+              timeFilter={timeFilter}
+              onUrgencyChange={setUrgencyFilter}
+              onPriceChange={setPriceFilter}
+              onTimeChange={setTimeFilter}
+            />
+
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              <input
+                type="number"
+                min={0}
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                placeholder="Мин. цена"
+                className="input"
+              />
+              <input
+                type="number"
+                min={0}
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                placeholder="Макс. цена"
+                className="input"
+              />
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button onClick={() => applyPricePreset(null, 1000)} className="rounded-full px-3 py-1.5 text-xs bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700">
+                До 1 000 ₸
+              </button>
+              <button onClick={() => applyPricePreset(1000, 5000)} className="rounded-full px-3 py-1.5 text-xs bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700">
+                1 000-5 000 ₸
+              </button>
+              <button onClick={() => applyPricePreset(5000, null)} className="rounded-full px-3 py-1.5 text-xs bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700">
+                От 5 000 ₸
+              </button>
+            </div>
+          </div>
         )}
 
         {!loading && tasks.length === 0 && user && (
@@ -305,9 +468,15 @@ export default function FeedPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
             {filteredAndSortedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} onTaskClaimed={handleTaskClaimed} />
+              <TaskCard
+                key={task.id}
+                task={task}
+                onTaskClaimed={handleTaskClaimed}
+                isFavorite={favoriteTaskIds.includes(task.id)}
+                onToggleFavorite={toggleFavoriteTask}
+              />
             ))}
           </div>
         )}

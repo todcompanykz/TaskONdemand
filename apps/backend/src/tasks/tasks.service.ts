@@ -48,8 +48,8 @@ export class TasksService {
     const result = await this.dataSource.query(
       `INSERT INTO tasks (
         "shortDescription", "fullDescription", reward, city, address, "geoPoint", 
-        urgency, status, "createdById", "expiresAt", "createdAt", "updatedAt"
-      ) VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9, $10, $11, NOW(), NOW())
+        urgency, status, "createdById", "expiresAt", "photoUrls", "createdAt", "updatedAt"
+      ) VALUES ($1, $2, $3, $4, $5, ST_SetSRID(ST_MakePoint($6, $7), 4326), $8, $9, $10, $11, $12, NOW(), NOW())
       RETURNING id`,
       [
         createTaskDto.shortDescription,
@@ -63,6 +63,7 @@ export class TasksService {
         TaskStatus.CREATED,
         userId,
         expiresAt,
+        createTaskDto.photoUrls ?? [],
       ],
     );
 
@@ -200,17 +201,6 @@ export class TasksService {
   }
 
   async cancelTask(taskId: string, userId: string): Promise<Task> {
-    // Check rate limit
-    const limitExceeded = await this.rateLimitService.checkAndIncrementCancel(
-      userId,
-    );
-    if (limitExceeded) {
-      throw new ForbiddenException(
-        'You have exceeded the cancel limit. Claiming is blocked for 24 hours.',
-      );
-    }
-
-    // Verify user is the creator
     const task = await this.tasksRepository.findOne({
       where: { id: taskId },
       relations: ['createdBy', 'claimedBy'],
@@ -224,12 +214,29 @@ export class TasksService {
       throw new ForbiddenException('Only the task creator can cancel');
     }
 
+    if (task.status !== TaskStatus.CREATED && task.status !== TaskStatus.CLAIMED) {
+      throw new BadRequestException('Task can only be cancelled from created or claimed status');
+    }
+
+    // Apply cancel limit only when creator cancels already claimed task.
+    // Cancelling a not-yet-claimed task should not penalize the creator.
+    if (task.status === TaskStatus.CLAIMED) {
+      const limitExceeded = await this.rateLimitService.checkAndIncrementCancel(
+        userId,
+      );
+      if (limitExceeded) {
+        throw new ForbiddenException(
+          'You have exceeded the cancel limit. Claiming is blocked for 24 hours.',
+        );
+      }
+    }
+
     // Use centralized transition service
     const cancelledTask = await this.stateTransitionService.transition(
       taskId,
       TaskStatus.CANCELLED,
       userId,
-      'creator_cancelled',
+      task.status === TaskStatus.CLAIMED ? 'creator_cancelled_claimed' : 'creator_cancelled_created',
     );
 
     this.logger.log({
@@ -241,6 +248,36 @@ export class TasksService {
     });
 
     return cancelledTask;
+  }
+
+  async deleteOwnTask(taskId: string, userId: string): Promise<{ success: true }> {
+    const task = await this.tasksRepository.findOne({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if (task.createdById !== userId) {
+      throw new ForbiddenException('Only the task creator can delete this task');
+    }
+
+    if (task.status === TaskStatus.CLAIMED || task.status === TaskStatus.COMPLETED) {
+      throw new BadRequestException('Claimed or completed tasks cannot be deleted');
+    }
+
+    await this.tasksRepository.delete(task.id);
+
+    this.logger.log({
+      event: 'task_deleted_by_creator',
+      taskId,
+      userId,
+      previousStatus: task.status,
+      timestamp: new Date().toISOString(),
+    });
+
+    return { success: true };
   }
 
   async refuseTask(taskId: string, userId: string): Promise<Task> {

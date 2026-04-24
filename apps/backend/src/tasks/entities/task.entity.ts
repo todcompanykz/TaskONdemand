@@ -36,6 +36,9 @@ export class Task {
   @Column('text')
   fullDescription: string;
 
+  @Column('text', { array: true, default: '{}' })
+  photoUrls: string[];
+
   @Column('int')
   reward: number; // KZT, divisible by 5 only
 

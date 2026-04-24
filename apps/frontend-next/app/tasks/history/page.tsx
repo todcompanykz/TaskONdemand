@@ -35,6 +35,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'created' | 'performing'>('created')
+  const [actionLoadingTaskId, setActionLoadingTaskId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,6 +54,32 @@ export default function HistoryPage() {
       setError(err.response?.data?.message || 'Ошибка загрузки истории')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCancelTask = async (taskId: string) => {
+    if (!confirm('Отменить задачу?')) return
+    try {
+      setActionLoadingTaskId(taskId)
+      await tasksApi.cancel(taskId)
+      await loadHistory()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка при отмене задачи')
+    } finally {
+      setActionLoadingTaskId(null)
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('Удалить задачу? Это действие нельзя отменить.')) return
+    try {
+      setActionLoadingTaskId(taskId)
+      await tasksApi.remove(taskId)
+      await loadHistory()
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Ошибка при удалении задачи')
+    } finally {
+      setActionLoadingTaskId(null)
     }
   }
 
@@ -127,11 +154,11 @@ export default function HistoryPage() {
             ) : (
               <div className="space-y-3 md:space-y-4">
                 {history?.created.map((task) => (
-                  <Link
+                  <div
                     key={task.id}
-                    href={`/tasks/${task.id}`}
                     className="card hover:shadow-md transition-shadow block p-4 md:p-6"
                   >
+                    <Link href={`/tasks/${task.id}`} className="block">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                       <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-gray-50">{task.shortDescription}</h3>
                       <div className="flex flex-wrap gap-2">
@@ -157,7 +184,30 @@ export default function HistoryPage() {
                         {new Date(task.createdAt).toLocaleDateString('ru-RU')}
                       </span>
                     </div>
-                  </Link>
+                    </Link>
+                    <div className="mt-3 flex gap-2">
+                      {task.status === 'created' && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelTask(task.id)}
+                          disabled={actionLoadingTaskId === task.id}
+                          className="btn-outline text-sm py-2 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoadingTaskId === task.id ? 'Отмена...' : 'Отменить'}
+                        </button>
+                      )}
+                      {(task.status === 'created' || task.status === 'cancelled' || task.status === 'expired') && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTask(task.id)}
+                          disabled={actionLoadingTaskId === task.id}
+                          className="btn-danger text-sm py-2 px-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {actionLoadingTaskId === task.id ? 'Удаление...' : 'Удалить'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

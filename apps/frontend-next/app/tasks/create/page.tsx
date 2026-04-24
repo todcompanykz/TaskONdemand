@@ -22,20 +22,15 @@ export default function CreateTaskPage() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const MAX_TOTAL_PHOTO_PAYLOAD_BYTES = 12 * 1024 * 1024
 
   useEffect(() => {
     if (!user) {
       router.push('/login')
     }
   }, [user, router])
-
-  useEffect(() => {
-    // #region agent log
-    if (typeof window !== 'undefined') {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks/create/page.tsx:CreateTaskPage:useEffect',message:'CreateTaskPage component mounted',data:{formData,hasCity:'city' in formData,hasAddress:'address' in formData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    }
-    // #endregion
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +54,6 @@ export default function CreateTaskPage() {
 
     try {
       setLoading(true)
-      // #region agent log
       const requestPayload = {
         shortDescription: formData.shortDescription,
         fullDescription: formData.fullDescription,
@@ -67,9 +61,8 @@ export default function CreateTaskPage() {
         city: formData.city.trim(),
         address: formData.address.trim(),
         urgency: formData.urgency,
+        photoUrls: photoPreviews,
       };
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'tasks/create/page.tsx:handleSubmit:before-api',message:'About to send create task request',data:{payload:requestPayload,hasLongitude:'longitude' in requestPayload,hasLatitude:'latitude' in requestPayload,hasCity:'city' in requestPayload,hasAddress:'address' in requestPayload},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       await tasksApi.create(requestPayload)
       showToast(t('toast.taskCreated'), 'success')
       router.push('/feed')
@@ -80,6 +73,87 @@ export default function CreateTaskPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+
+    if (photoPreviews.length >= 5) {
+      setError('Можно прикрепить не больше 5 фото')
+      return
+    }
+
+    const remainingSlots = 5 - photoPreviews.length
+    const selectedFiles = Array.from(files).slice(0, remainingSlots)
+    setUploadingPhoto(true)
+    setError('')
+
+    try {
+      const converted = await Promise.all(
+        selectedFiles.map(
+          (file) =>
+            new Promise<string>((resolve, reject) => {
+              if (!file.type.startsWith('image/')) {
+                reject(new Error('Можно загружать только изображения'))
+                return
+              }
+
+              if (file.size > 3 * 1024 * 1024) {
+                reject(new Error('Размер одного фото не должен превышать 3MB'))
+                return
+              }
+
+              const reader = new FileReader()
+              reader.onload = () => {
+                const image = new Image()
+                image.onload = () => {
+                  const maxWidth = 1600
+                  const maxHeight = 1600
+                  const scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1)
+                  const targetWidth = Math.round(image.width * scale)
+                  const targetHeight = Math.round(image.height * scale)
+
+                  const canvas = document.createElement('canvas')
+                  canvas.width = targetWidth
+                  canvas.height = targetHeight
+                  const ctx = canvas.getContext('2d')
+                  if (!ctx) {
+                    reject(new Error('Не удалось обработать изображение'))
+                    return
+                  }
+
+                  ctx.drawImage(image, 0, 0, targetWidth, targetHeight)
+                  const compressed = canvas.toDataURL('image/jpeg', 0.78)
+                  resolve(compressed)
+                }
+                image.onerror = () => reject(new Error('Не удалось обработать изображение'))
+                image.src = reader.result as string
+              }
+              reader.onerror = () => reject(new Error('Не удалось прочитать файл'))
+              reader.readAsDataURL(file)
+            }),
+        ),
+      )
+      setPhotoPreviews((prev) => {
+        const next = [...prev, ...converted]
+        const totalBytes = next.reduce((sum, photo) => sum + photo.length, 0)
+        if (totalBytes > MAX_TOTAL_PHOTO_PAYLOAD_BYTES) {
+          setError('Слишком большой общий размер фото. Уменьшите количество или размер изображений.')
+          return prev
+        }
+        return next
+      })
+    } catch (uploadError: any) {
+      setError(uploadError.message || 'Ошибка загрузки фото')
+    } finally {
+      setUploadingPhoto(false)
+      event.target.value = ''
+    }
+  }
+
+  const handleRemovePhoto = (index: number) => {
+    setPhotoPreviews((prev) => prev.filter((_, currentIndex) => currentIndex !== index))
   }
 
 
@@ -125,6 +199,48 @@ export default function CreateTaskPage() {
                 className="input"
                 placeholder="Подробное описание задачи..."
               />
+            </div>
+
+            <div>
+              <label htmlFor="photos" className="label">
+                Фото к задаче (до 5)
+              </label>
+              <input
+                id="photos"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handlePhotoChange}
+                className="input min-h-[44px] file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                До 5 фото, каждое не больше 3MB
+              </p>
+
+              {uploadingPhoto && (
+                <p className="text-sm text-primary mt-2">Загрузка фото...</p>
+              )}
+
+              {photoPreviews.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-3">
+                  {photoPreviews.map((photo, index) => (
+                    <div key={`${photo.slice(0, 16)}-${index}`} className="relative">
+                      <img
+                        src={photo}
+                        alt={`Фото ${index + 1}`}
+                        className="h-24 w-full rounded-lg border border-gray-200 dark:border-slate-700 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute right-1 top-1 rounded-full bg-black/70 px-1.5 py-0.5 text-xs text-white"
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>

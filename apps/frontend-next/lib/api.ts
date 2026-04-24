@@ -37,15 +37,6 @@ api.interceptors.request.use(
     const apiUrl = getApiUrl()
     config.baseURL = apiUrl
 
-    // #region agent log
-    try {
-      const url = typeof config.url === 'string' ? config.url : ''
-      if (url.includes('/support')) {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:requestInterceptor:support',message:'Support request from frontend',data:{method:config.method,url,baseURL:config.baseURL},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      }
-    } catch (e) {}
-    // #endregion
-    
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -124,6 +115,7 @@ export interface Task {
   id: string
   shortDescription: string
   fullDescription: string
+  photoUrls: string[]
   reward: number
   city: string
   address: string
@@ -148,6 +140,7 @@ export interface CreateTaskDto {
   city: string
   address: string
   urgency: 'low' | 'medium' | 'high'
+  photoUrls?: string[]
 }
 
 export const authApi = {
@@ -182,6 +175,10 @@ export const tasksApi = {
   },
   cancel: async (taskId: string) => {
     const { data } = await api.post(`/tasks/${taskId}/cancel`)
+    return data
+  },
+  remove: async (taskId: string) => {
+    const { data } = await api.delete(`/tasks/${taskId}`)
     return data
   },
   refuse: async (taskId: string) => {
@@ -432,11 +429,6 @@ export const supportApi = {
   // Legacy endpoints (backward compatibility)
   // NOTE: This endpoint is deprecated. Use createConversation instead.
   createRequest: async (data: CreateSupportRequestData) => {
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:createRequest:entry',message:'supportApi.createRequest called',data:{topic:data.topic,messageLength:data.message?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    } catch (e) {}
-    // #endregion
     const { data: response } = await api.post('/support/requests', data)
     return response
   },
@@ -450,11 +442,6 @@ export const supportApi = {
   },
   // New conversation-based endpoints
   createConversation: async (topic: string, message: string): Promise<SupportConversation> => {
-    // #region agent log
-    try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'lib/api.ts:createConversation:entry',message:'supportApi.createConversation called',data:{topic,messageLength:message?.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    } catch (e) {}
-    // #endregion
     const { data } = await api.post('/support/conversations', { topic, message })
     return data
   },

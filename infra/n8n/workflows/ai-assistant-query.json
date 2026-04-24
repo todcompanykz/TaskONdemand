@@ -1,0 +1,54 @@
+{
+  "name": "AI Assistant Query",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ai-assistant",
+        "responseMode": "responseNode"
+      },
+      "id": "Webhook1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 260]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.AI_API_BASE_URL}}/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{'Bearer ' + $env.AI_API_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":$json.body.prompt}]}"
+      },
+      "id": "HttpRequest1",
+      "name": "AI Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "Respond1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [760, 260]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "AI Request", "type": "main", "index": 0 }]]
+    },
+    "AI Request": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  }
+}

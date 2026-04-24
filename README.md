@@ -16,9 +16,9 @@ docker compose up --build
 ```
 
 This starts:
-- ✅ Frontend (Next.js) - http://localhost:3000
-- ✅ Backend (NestJS) - http://localhost:3001
-- ✅ PostgreSQL + PostGIS - localhost:5432
+- ✅ Frontend (Next.js) - http://localhost:${FRONTEND_PORT:-3000}
+- ✅ Backend (NestJS) - http://localhost:${BACKEND_PORT:-3001}
+- ✅ PostgreSQL + PostGIS - localhost:${DB_PORT:-5432}
 - ✅ Redis - localhost:6379
 - ✅ RabbitMQ - localhost:5672 (Management: http://localhost:15672)
 
@@ -29,7 +29,7 @@ This starts:
    cp .env.example .env
    ```
 
-2. Update `.env` with your settings (optional, defaults work for local dev)
+2. Update `.env` with your settings (recommended for local/VPS reproducibility)
 
 3. Start services:
    ```bash
@@ -39,8 +39,9 @@ This starts:
 4. Wait for services to be healthy (check logs)
 
 5. Access:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001
+   - Frontend: `http://localhost:${FRONTEND_PORT}`
+   - Backend API: `http://localhost:${BACKEND_PORT}`
+   - Backend health: `http://localhost:${BACKEND_PORT}/health`
    - RabbitMQ Management: http://localhost:15672 (admin/admin)
 
 ## 📁 Project Structure
@@ -59,7 +60,7 @@ This starts:
 │       └── package.json
 ├── docker-compose.yml    # Full stack orchestration
 ├── schema.sql            # Database schema
-└── .env.example          # Environment template
+└── .env.example          # Environment template for compose
 ```
 
 ## 🎨 Frontend Features
@@ -157,12 +158,13 @@ docker compose up postgres redis
 
 ### Environment Variables
 
-See `.env.example` for all available variables.
+See `.env.example` for all available variables used by `docker-compose.yml`.
 
 Key variables:
 - `JWT_SECRET` - Must be set in production (min 32 chars)
-- `DB_PASSWORD` - Database password
-- `NEXT_PUBLIC_API_URL` - Backend API URL for frontend
+- `DB_*` - Database credentials and host port mapping
+- `FRONTEND_PORT` / `BACKEND_PORT` - Exposed app ports
+- `FRONTEND_URL` - Allowed frontend origin for backend CORS
 
 ## 📱 PWA Support
 
@@ -174,14 +176,14 @@ Frontend is PWA-ready:
 
 ## 🐳 Docker Services
 
-| Service | Port | Description |
+| Service | Port (default) | Description |
 |---------|------|-------------|
-| Frontend | 3000 | Next.js app |
-| Backend | 3001 | NestJS API |
-| PostgreSQL | 5432 | Database with PostGIS |
-| Redis | 6379 | Cache & rate limiting |
-| RabbitMQ | 5672 | Message queue (not used in MVP) |
-| RabbitMQ Mgmt | 15672 | Management UI |
+| Frontend | `${FRONTEND_PORT:-3000}` | Next.js app |
+| Backend | `${BACKEND_PORT:-3001}` | NestJS API |
+| PostgreSQL | `${DB_PORT:-5432}` | Database with PostGIS |
+| Redis | `${REDIS_PORT:-6379}` | Cache & rate limiting |
+| RabbitMQ | `${RABBITMQ_PORT:-5672}` | Message queue (not used in MVP) |
+| RabbitMQ Mgmt | `${RABBITMQ_MANAGEMENT_PORT:-15672}` | Management UI |
 
 ## 🔍 Health Checks
 
@@ -203,7 +205,11 @@ docker compose ps
 
 1. Check ports are available:
    ```bash
-   netstat -an | grep -E '3000|3001|5432|6379'
+   # Linux/macOS
+   ss -lntp | grep -E '3000|3001|5432|6379|5672|15672'
+
+   # Windows PowerShell
+   Get-NetTCPConnection -State Listen | Where-Object { $_.LocalPort -in 3000,3001,5432,6379,5672,15672 }
    ```
 
 2. Check Docker logs:
@@ -218,8 +224,8 @@ docker compose ps
 
 ### Frontend can't connect to backend
 
-- Check `NEXT_PUBLIC_API_URL` in `.env`
-- Verify backend is running: `curl http://localhost:3001`
+- Check backend CORS origin via `FRONTEND_URL` in `.env`
+- Verify backend is running: `curl http://localhost:${BACKEND_PORT}/health`
 
 ## 📝 Notes
 

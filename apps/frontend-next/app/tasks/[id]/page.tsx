@@ -47,24 +47,6 @@ export default function TaskDetailsPage() {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reviewRating, setReviewRating] = useState<number>(0)
-  
-  // #region agent log
-  const logReviewRatingChange = (newValue: number) => {
-    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'H4',
-        location: 'apps/frontend-next/app/tasks/[id]/page.tsx:setReviewRating',
-        message: 'reviewRating state updated',
-        data: { newValue, taskId: task?.id },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {})
-  }
-  // #endregion
   const [reviewComment, setReviewComment] = useState('')
   const [reviewSubmitting, setReviewSubmitting] = useState(false)
   const [reviewSubmitted, setReviewSubmitted] = useState(false)
@@ -77,30 +59,6 @@ export default function TaskDetailsPage() {
     }
     loadTask()
   }, [params.id])
-
-  // #region agent log
-  useEffect(() => {
-    if (task && user) {
-      const isCreator = task.createdById === user.id
-      const isClaimer = task.claimedById === user.id
-      if (task.status === 'completed' && (isCreator || isClaimer) && !reviewSubmitted) {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'debug-session',
-            runId: 'run1',
-            hypothesisId: 'H1',
-            location: 'apps/frontend-next/app/tasks/[id]/page.tsx:review-form-effect',
-            message: 'review_form_rendered',
-            data: { taskId: task.id, status: task.status, isCreator, isClaimer, reviewRating },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {})
-      }
-    }
-  }, [task, user, reviewSubmitted, reviewRating])
-  // #endregion
 
   const loadTask = async () => {
     try {
@@ -277,65 +235,12 @@ export default function TaskDetailsPage() {
     try {
       setReviewSubmitting(true)
       setError('')
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'H4',
-          location: 'apps/frontend-next/app/tasks/[id]/page.tsx:handleSubmitReview:pre',
-          message: 'review_submit_start',
-          data: {
-            rating: reviewRating,
-            hasComment: Boolean(reviewComment?.trim()),
-            taskIdPrefix: String(task.id || '').slice(0, 8),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-      // #endregion
       await reviewsApi.createReview(task.id, reviewRating, reviewComment || undefined)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'H4',
-          location: 'apps/frontend-next/app/tasks/[id]/page.tsx:handleSubmitReview:post',
-          message: 'review_submit_success',
-          data: { taskIdPrefix: String(task.id || '').slice(0, 8) },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-      // #endregion
       setReviewSubmitted(true)
       setReviewRating(0)
       setReviewComment('')
       await loadTask()
     } catch (err: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'debug-session',
-          runId: 'run1',
-          hypothesisId: 'H5',
-          location: 'apps/frontend-next/app/tasks/[id]/page.tsx:handleSubmitReview:catch',
-          message: 'review_submit_error',
-          data: {
-            status: err?.response?.status,
-            message: err?.response?.data?.message || err?.message || 'unknown',
-            taskIdPrefix: String(task?.id || '').slice(0, 8),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {})
-      // #endregion
       setError(err.response?.data?.message || 'Ошибка отправки отзыва')
     } finally {
       setReviewSubmitting(false)
@@ -402,6 +307,29 @@ export default function TaskDetailsPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">Описание</h2>
             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{task.fullDescription}</p>
           </div>
+
+          {task.photoUrls && task.photoUrls.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">Фотографии</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {task.photoUrls.map((photoUrl, index) => (
+                  <a
+                    key={`${photoUrl.slice(0, 12)}-${index}`}
+                    href={photoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block"
+                  >
+                    <img
+                      src={photoUrl}
+                      alt={`Фото задачи ${index + 1}`}
+                      className="h-32 md:h-40 w-full rounded-lg border border-gray-200 dark:border-slate-700 object-cover"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           {task.city && task.address && (
             <div className="mb-6">
@@ -570,22 +498,6 @@ export default function TaskDetailsPage() {
                 <StarRating 
                   value={reviewRating} 
                   onChange={(newValue) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        sessionId: 'debug-session',
-                        runId: 'run1',
-                        hypothesisId: 'H5',
-                        location: 'apps/frontend-next/app/tasks/[id]/page.tsx:StarRating onChange',
-                        message: 'StarRating onChange callback',
-                        data: { newValue, currentReviewRating: reviewRating },
-                        timestamp: Date.now(),
-                      }),
-                    }).catch(() => {})
-                    // #endregion
-                    logReviewRatingChange(newValue)
                     setReviewRating(newValue)
                   }} 
                 />

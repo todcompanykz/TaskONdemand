@@ -5,7 +5,7 @@ export class SetSuperAdminEmail1700000009000 implements MigrationInterface {
     // Set SUPER_ADMIN role for super@admin.com
     await queryRunner.query(`
       UPDATE "users"
-      SET "role" = 'SUPER_ADMIN', "permissions" = '[]'
+      SET "role" = 'SUPER_ADMIN', "permissions" = '{}'
       WHERE LOWER("email") = LOWER('super@admin.com')
     `);
   }
@@ -14,7 +14,7 @@ export class SetSuperAdminEmail1700000009000 implements MigrationInterface {
     // Revert to USER role
     await queryRunner.query(`
       UPDATE "users"
-      SET "role" = 'USER', "permissions" = '[]'
+      SET "role" = 'USER', "permissions" = '{}'
       WHERE LOWER("email") = LOWER('super@admin.com')
     `);
   }
