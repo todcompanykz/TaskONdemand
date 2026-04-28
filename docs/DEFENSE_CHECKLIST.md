@@ -1,5 +1,9 @@
 # Defense Checklist (Mapping to Grading Criteria)
 
+Primary references:
+- Evidence: `docs/EVIDENCE_PACK.md`
+- Demo timeline: `docs/DEMO_SCRIPT.md`
+
 ## 1) Linux VM
 - Ubuntu Server VM created and accessible by SSH.
 - Evidence: VM info screenshot + `uname -a`.
@@ -34,7 +38,7 @@
 - Workflows: `infra/n8n/workflows`.
 
 ## 9) IaC
-- Terraform starter: `infra/iac/terraform`.
+- Terraform provisioning: `infra/iac/terraform`.
 - Ansible playbook: `infra/iac/ansible/playbooks/site.yml`.
 
 ## Demo command pack

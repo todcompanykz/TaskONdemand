@@ -3,16 +3,11 @@
   hosts: tod_vm
   become: true
   vars:
+    sshd_config_path: /etc/ssh/sshd_config
     allowed_tcp_ports:
       - 22
       - 80
       - 443
-      - 3000
-      - 3001
-      - 5432
-      - 6379
-      - 5672
-      - 15672
   tasks:
     - name: Install baseline packages
       ansible.builtin.apt:
@@ -24,6 +19,33 @@
         state: present
         update_cache: true
 
+    - name: Ensure Fail2Ban service is enabled
+      ansible.builtin.service:
+        name: fail2ban
+        enabled: true
+        state: started
+
+    - name: Ensure SSH password authentication is disabled
+      ansible.builtin.lineinfile:
+        path: "{{ sshd_config_path }}"
+        regexp: "^#?PasswordAuthentication\\s+"
+        line: "PasswordAuthentication no"
+      notify: Restart ssh
+
+    - name: Ensure SSH root login is disabled
+      ansible.builtin.lineinfile:
+        path: "{{ sshd_config_path }}"
+        regexp: "^#?PermitRootLogin\\s+"
+        line: "PermitRootLogin no"
+      notify: Restart ssh
+
+    - name: Ensure SSH public key authentication is enabled
+      ansible.builtin.lineinfile:
+        path: "{{ sshd_config_path }}"
+        regexp: "^#?PubkeyAuthentication\\s+"
+        line: "PubkeyAuthentication yes"
+      notify: Restart ssh
+
     - name: Allow required ports in UFW
       community.general.ufw:
         rule: allow
@@ -34,3 +56,19 @@
     - name: Enable UFW
       community.general.ufw:
         state: enabled
+
+    - name: Ensure UFW default deny incoming
+      community.general.ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Ensure UFW default allow outgoing
+      community.general.ufw:
+        direction: outgoing
+        policy: allow
+
+  handlers:
+    - name: Restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

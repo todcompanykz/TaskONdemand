@@ -15,7 +15,7 @@
     {
       "parameters": {
         "chatId": "={{$env.TELEGRAM_CHAT_ID}}",
-        "text": "={{$json.body.message || 'Infrastructure alert received'}}"
+        "text": "={{ ($json.alerts && $json.alerts.length) ? $json.alerts.map(a => (a.annotations && (a.annotations.description || a.annotations.summary)) || (a.labels && a.labels.alertname) || 'Alert').join('\\n---\\n') : ($json.message || 'Infrastructure alert') }}"
       },
       "id": "Telegram1",
       "name": "Telegram",

@@ -23,13 +23,24 @@
           ]
         },
         "sendBody": true,
-        "jsonBody": "={\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":$json.body.prompt}]}"
+        "jsonBody": "={\"model\":($env.AI_MODEL || \"gpt-4o-mini\"),\"messages\":[{\"role\":\"system\",\"content\":\"You are TaskOnDemand infrastructure assistant. Keep responses concise and actionable.\"},{\"role\":\"user\",\"content\":$json.body.prompt}],\"temperature\":0.2}"
       },
       "id": "HttpRequest1",
       "name": "AI Request",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [520, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const completion = $json;\nconst answer = completion?.choices?.[0]?.message?.content ?? \"No response\";\nreturn {\n  answer,\n  model: completion?.model ?? ($env.AI_MODEL || \"unknown\"),\n  usage: completion?.usage ?? null,\n  trace: {\n    provider_base_url: $env.AI_API_BASE_URL,\n    requested_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "Code1",
+      "name": "Normalize Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 260]
     },
     {
       "parameters": {
@@ -40,7 +51,7 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [760, 260]
+      "position": [930, 260]
     }
   ],
   "connections": {
@@ -48,6 +59,9 @@
       "main": [[{ "node": "AI Request", "type": "main", "index": 0 }]]
     },
     "AI Request": {
+      "main": [[{ "node": "Normalize Response", "type": "main", "index": 0 }]]
+    },
+    "Normalize Response": {
       "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
     }
   }

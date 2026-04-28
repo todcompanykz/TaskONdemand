@@ -1,0 +1,17 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: n8n-telegram
+  group_by: ['alertname']
+  group_wait: 15s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: n8n-telegram
+    webhook_configs:
+      # Requires n8n with profile `automation` and workflow "Infra Alert to Telegram" (webhook path: infra-alert).
+      # Internal URL on the compose network:
+      - url: 'http://n8n:5678/n8n/webhook/infra-alert'
+        send_resolved: true

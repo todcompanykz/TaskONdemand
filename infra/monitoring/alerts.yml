@@ -18,3 +18,30 @@ groups:
         annotations:
           summary: "High container CPU usage"
           description: "One or more containers are using high CPU for 2+ minutes."
+
+      - alert: BackendHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="backend"}[5m])) by (le)) > 1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backend high latency"
+          description: "95th percentile backend response time is above 1s for more than 3 minutes."
+
+      - alert: LowMemoryAvailable
+        expr: (node_memory_MemAvailable_bytes{job="node_exporter"} / node_memory_MemTotal_bytes{job="node_exporter"}) * 100 < 15
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low memory available"
+          description: "Available RAM is below 15% for more than 3 minutes."
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{job="node_exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{job="node_exporter",mountpoint="/",fstype!~"tmpfs|overlay|squashfs"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Root filesystem free space is below 15% for more than 5 minutes."

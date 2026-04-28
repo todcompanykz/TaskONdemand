@@ -4,15 +4,19 @@ services:
     container_name: tod-n8n
     restart: unless-stopped
     environment:
+      # Subpath behind Nginx: http://localhost/n8n/ (see infra/nginx/conf.d/default.conf)
+      N8N_PATH: /n8n/
       N8N_HOST: ${N8N_HOST:-localhost}
       N8N_PORT: 5678
       N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
-      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost/n8n/}
+      N8N_PROXY_HOPS: "1"
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-change-me-32-chars-minimum}
       GENERIC_TIMEZONE: ${N8N_TIMEZONE:-Asia/Almaty}
       TZ: ${N8N_TIMEZONE:-Asia/Almaty}
       AI_API_KEY: ${AI_API_KEY:-}
-      AI_API_BASE_URL: ${AI_API_BASE_URL:-https://api.openai.com/v1}
+      AI_API_BASE_URL: ${AI_API_BASE_URL:-http://opal:4000/v1}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
       BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:3001}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
@@ -24,10 +28,22 @@ services:
     profiles: ["automation"]
     networks:
       - tod-network
+    depends_on:
+      - opal
+
+  opal:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: tod-opal
+    restart: unless-stopped
+    command: ["--host", "0.0.0.0", "--port", "4000"]
+    environment:
+      LITELLM_MASTER_KEY: ${OPAL_MASTER_KEY:-change-me-opal-master-key}
+      OPENAI_API_KEY: ${AI_API_KEY:-}
+    ports:
+      - "${OPAL_PORT:-4000}:4000"
+    profiles: ["automation"]
+    networks:
+      - tod-network
 
 volumes:
   n8n_data:
-
-networks:
-  tod-network:
-    external: false

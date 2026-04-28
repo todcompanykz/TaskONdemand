@@ -39,6 +39,10 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
+# Nginx TLS for local/VM (generate: scripts/generate-self-signed-tls.sh or Docker alpine/openssl)
+infra/nginx/ssl/server.crt
+infra/nginx/ssl/server.key
+
 # Cursor debug logs
 .cursor/debug.log
 

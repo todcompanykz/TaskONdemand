@@ -1,0 +1,16 @@
+# Full stack: app services + Nginx edge + Prometheus/Grafana/Alertmanager + n8n.
+# Run from repository root (paths in included files assume cwd = repo root for volume mounts in base compose).
+#
+#   docker compose --env-file .env -f infra/docker/docker-compose.full.yml --profile monitoring --profile automation up -d --build
+#
+# Profiles:
+#   --profile monitoring  — node-exporter, cadvisor, Prometheus, Grafana, Alertmanager
+#   --profile automation — n8n (AI / Telegram workflows)
+#
+# Avoid Grafana vs frontend port clash: set GRAFANA_PORT=3010 in .env (defaults below were updated in docker-compose.monitoring.yml).
+
+include:
+  - path: docker-compose.base.yml
+  - path: docker-compose.security.yml
+  - path: docker-compose.monitoring.yml
+  - path: docker-compose.automation.yml

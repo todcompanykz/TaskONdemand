@@ -21,7 +21,13 @@ docker compose -f infra/docker/docker-compose.base.yml -f infra/docker/docker-co
 ## Alerting
 - Prometheus rule file: `infra/monitoring/alerts.yml`
 - Includes backend availability and high CPU warning examples.
+- End-to-end runbook (Prometheus -> Alertmanager -> n8n -> Telegram):
+  - `docs/MONITORING_RUNBOOK.md`
 
 ## Jenkins
 - Pipeline file: `infra/jenkins/Jenkinsfile`
 - Stages: checkout, install, backend tests, docker build, smoke health check.
+
+## GitHub Actions
+- Workflow file: `.github/workflows/ci.yml`
+- Jobs: backend lint/test/build, frontend lint/build, compose smoke check.

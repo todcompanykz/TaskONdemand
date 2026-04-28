@@ -15,7 +15,3 @@ services:
     restart: unless-stopped
     networks:
       - tod-network
-
-networks:
-  tod-network:
-    external: false

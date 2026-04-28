@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-src/
+src/                    # relative to apps/backend
 ├── admin/              # Minimal admin panel
 ├── auth/              # Authentication (JWT, email/password)
 ├── database/          # Database config, migrations, PostGIS setup

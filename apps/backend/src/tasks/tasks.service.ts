@@ -12,6 +12,7 @@ import { User } from '../users/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStateTransitionService } from './task-state-transition.service';
 import { RateLimitService } from './services/rate-limit.service';
+import { TelegramNotificationsService } from '../notifications/telegram-notifications.service';
 
 @Injectable()
 export class TasksService {
@@ -25,6 +26,7 @@ export class TasksService {
     private dataSource: DataSource,
     private stateTransitionService: TaskStateTransitionService,
     private rateLimitService: RateLimitService,
+    private telegramNotificationsService: TelegramNotificationsService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
@@ -85,6 +87,8 @@ export class TasksService {
       expiresAt: savedTask.expiresAt.toISOString(),
       timestamp: new Date().toISOString(),
     });
+
+    void this.telegramNotificationsService.notifyTaskCreated(savedTask);
 
     return savedTask;
   }
@@ -186,6 +190,8 @@ export class TasksService {
         reward: task.reward,
         timestamp: new Date().toISOString(),
       });
+
+      void this.telegramNotificationsService.notifyTaskClaimed(task);
 
       return task;
     } catch (error) {
@@ -360,6 +366,10 @@ export class TasksService {
       timestamp: new Date().toISOString(),
     });
 
+    if (updatedTask.status === TaskStatus.COMPLETED) {
+      void this.telegramNotificationsService.notifyTaskCompleted(updatedTask);
+    }
+
     return updatedTask;
   }
 
@@ -398,6 +408,10 @@ export class TasksService {
       completed: updatedTask.status === TaskStatus.COMPLETED,
       timestamp: new Date().toISOString(),
     });
+
+    if (updatedTask.status === TaskStatus.COMPLETED) {
+      void this.telegramNotificationsService.notifyTaskCompleted(updatedTask);
+    }
 
     return updatedTask;
   }

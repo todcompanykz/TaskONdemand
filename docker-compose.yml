@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-tod}
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${DB_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -76,6 +76,8 @@ services:
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     depends_on:

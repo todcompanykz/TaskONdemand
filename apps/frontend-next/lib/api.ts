@@ -10,9 +10,12 @@ function getApiUrl(): string {
 
   // Auto-detect from browser location (client-side)
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname
-    const protocol = window.location.protocol
-    // Replace port 3000 with 3001, or use default 3001 if no port specified
+    const { protocol, hostname, port } = window.location
+    // Nginx reverse proxy on default ports: API is served under /api
+    if (port === '' || port === '80' || port === '443') {
+      return `${protocol}//${hostname}/api`
+    }
+    // Direct Next dev server on :3000 (or any non-standard port) → API on :3001
     return `${protocol}//${hostname}:3001`
   }
 
