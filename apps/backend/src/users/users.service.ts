@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
 import * as fs from 'fs';
@@ -8,7 +12,6 @@ import { UserNotificationSettings } from './entities/user-notification-settings.
 import { Task, TaskStatus } from '../tasks/entities/task.entity';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateNotificationSettingsDto } from './dto/update-notification-settings.dto';
-import { UpdateFCMTokenDto } from './dto/update-fcm-token.dto';
 
 @Injectable()
 export class UsersService {
@@ -32,9 +35,21 @@ export class UsersService {
   async getProfile(userId: string) {
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'users.service.ts:24',message:'getProfile entry',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'users.service.ts:24',
+          message: 'getProfile entry',
+          data: { userId },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     const user = await this.usersRepository.findOne({
@@ -43,9 +58,25 @@ export class UsersService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'users.service.ts:29',message:'getProfile user found',data:{userFound:!!user,hasFirstName:!!user?.firstName,hasLastName:!!user?.lastName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'users.service.ts:29',
+          message: 'getProfile user found',
+          data: {
+            userFound: !!user,
+            hasFirstName: !!user?.firstName,
+            hasLastName: !!user?.lastName,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     if (!user) {
@@ -60,7 +91,8 @@ export class UsersService {
       where: { status: TaskStatus.COMPLETED, claimedById: userId },
     });
     // Note: A task can be both created and claimed by same user, but in MVP we'll sum them
-    const completedTasksCount = completedTasksAsCreator + completedTasksAsExecutor;
+    const completedTasksCount =
+      completedTasksAsCreator + completedTasksAsExecutor;
 
     // Count recent cancellations (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -88,9 +120,25 @@ export class UsersService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'users.service.ts:53',message:'getProfile return',data:{profileFirstName:profile.firstName,profileLastName:profile.lastName,completedTasksCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'users.service.ts:53',
+          message: 'getProfile return',
+          data: {
+            profileFirstName: profile.firstName,
+            profileLastName: profile.lastName,
+            completedTasksCount,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     return profile;
@@ -114,7 +162,8 @@ export class UsersService {
     if (updateDto.firstName !== undefined) user.firstName = updateDto.firstName;
     if (updateDto.lastName !== undefined) user.lastName = updateDto.lastName;
     if (updateDto.email !== undefined) user.email = updateDto.email;
-    if (updateDto.phoneNumber !== undefined) user.phoneNumber = updateDto.phoneNumber;
+    if (updateDto.phoneNumber !== undefined)
+      user.phoneNumber = updateDto.phoneNumber;
 
     await this.usersRepository.save(user);
 
@@ -144,7 +193,10 @@ export class UsersService {
     return settings;
   }
 
-  async updateNotificationSettings(userId: string, updateDto: UpdateNotificationSettingsDto) {
+  async updateNotificationSettings(
+    userId: string,
+    updateDto: UpdateNotificationSettingsDto,
+  ) {
     let settings = await this.notificationSettingsRepository.findOne({
       where: { userId },
     });

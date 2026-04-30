@@ -12,26 +12,34 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto, @Req() req: Request) {
-    this.logger.log(`Register attempt: email=${registerDto.email}, origin=${req.headers.origin || 'no-origin'}`);
+    this.logger.log(
+      `Register attempt: email=${registerDto.email}, origin=${req.headers.origin || 'no-origin'}`,
+    );
     try {
       const result = await this.authService.register(registerDto);
       this.logger.log(`Register success: email=${registerDto.email}`);
       return result;
     } catch (error) {
-      this.logger.error(`Register failed: email=${registerDto.email}, error=${error.message}`);
+      this.logger.error(
+        `Register failed: email=${registerDto.email}, error=${error.message}`,
+      );
       throw error;
     }
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Req() req: Request) {
-    this.logger.log(`Login attempt: email=${loginDto.email}, origin=${req.headers.origin || 'no-origin'}`);
+    this.logger.log(
+      `Login attempt: email=${loginDto.email}, origin=${req.headers.origin || 'no-origin'}`,
+    );
     try {
       const result = await this.authService.login(loginDto);
       this.logger.log(`Login success: email=${loginDto.email}`);
       return result;
     } catch (error) {
-      this.logger.error(`Login failed: email=${loginDto.email}, error=${error.message}`);
+      this.logger.error(
+        `Login failed: email=${loginDto.email}, error=${error.message}`,
+      );
       throw error;
     }
   }

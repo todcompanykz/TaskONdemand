@@ -43,7 +43,7 @@ export class PermissionsGuard implements CanActivate {
     // ADMIN must have all required permissions
     if (user.role === UserRole.ADMIN) {
       const userPermissions = user.permissions || [];
-      
+
       // Check if user has all required permissions
       const hasAllPermissions = requiredPermissions.every((permission) =>
         userPermissions.includes(permission),

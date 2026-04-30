@@ -12,7 +12,7 @@ import { isValidPermission } from '../../common/enums/permissions.enum';
 
 @ValidatorConstraint({ name: 'isValidPermissions', async: false })
 class IsValidPermissionsConstraint implements ValidatorConstraintInterface {
-  validate(permissions: string[], args: ValidationArguments) {
+  validate(permissions: string[]) {
     if (!Array.isArray(permissions)) {
       return false;
     }

@@ -7,7 +7,10 @@ export class AddSupportRepliesNotificationSetting1700000006000 implements Migrat
       type: 'boolean',
       default: true,
     });
-    await queryRunner.addColumn('user_notification_settings', supportRepliesColumn);
+    await queryRunner.addColumn(
+      'user_notification_settings',
+      supportRepliesColumn,
+    );
 
     // Update existing records to have supportReplies=true
     await queryRunner.query(`
@@ -18,6 +21,9 @@ export class AddSupportRepliesNotificationSetting1700000006000 implements Migrat
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropColumn('user_notification_settings', 'supportReplies');
+    await queryRunner.dropColumn(
+      'user_notification_settings',
+      'supportReplies',
+    );
   }
 }

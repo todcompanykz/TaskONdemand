@@ -9,6 +9,9 @@ import { SupportRequest } from '../support/entities/support-request.entity';
 import { SupportConversation } from '../support/entities/support-conversation.entity';
 import { SupportMessage } from '../support/entities/support-message.entity';
 import { AdminAccessToken } from '../admin/entities/admin-access-token.entity';
+import { ChatConversation } from '../chat/entities/chat-conversation.entity';
+import { ChatMessage } from '../chat/entities/chat-message.entity';
+import { ChatBlock } from '../chat/entities/chat-block.entity';
 
 config();
 
@@ -33,6 +36,9 @@ export const dataSourceOptions: DataSourceOptions = {
     SupportConversation,
     SupportMessage,
     AdminAccessToken,
+    ChatConversation,
+    ChatMessage,
+    ChatBlock,
   ],
   migrations: migrationsPath,
   synchronize: false,

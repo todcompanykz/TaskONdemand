@@ -252,14 +252,14 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-200 pb-20 md:pb-8">
+    <div className="min-h-screen transition-colors duration-200 pb-20 md:pb-8">
       {showOnboarding && (
         <OnboardingModal onComplete={() => setShowOnboarding(false)} />
       )}
       <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-4 md:py-8">
         {/* City Filter - Search Bar Style */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 shadow-sm">
+          <div className="card rounded-xl p-3 flex items-center gap-3">
             {/* Location Icon */}
             <svg 
               className="w-5 h-5 text-gray-400 dark:text-gray-500 flex-shrink-0" 
@@ -323,7 +323,7 @@ export default function FeedPage() {
         {/* Filters Toggle and Sort Controls */}
         {!loading && tasks.length > 0 && (
           <div className="mb-4 space-y-3">
-            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2">
+            <div className="card rounded-lg px-3 py-2 flex items-center gap-2">
               <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.6-4.4a6 6 0 11-12 0 6 6 0 0112 0z" />
               </svg>
@@ -338,7 +338,7 @@ export default function FeedPage() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 btn-outline text-sm"
               >
                 <svg
                   className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}
@@ -388,7 +388,7 @@ export default function FeedPage() {
 
         {/* Quick Filters */}
         {!loading && tasks.length > 0 && showFilters && (
-          <div className="mb-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
+          <div className="mb-4 card rounded-xl p-3">
             <QuickFilter
               urgencyFilter={urgencyFilter}
               priceFilter={priceFilter}

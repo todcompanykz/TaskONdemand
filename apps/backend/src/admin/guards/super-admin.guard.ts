@@ -18,8 +18,30 @@ export class SuperAdminGuard implements CanActivate {
 
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'super-admin.guard.ts:15',message:'SuperAdminGuard check',data:{hasUser:!!user,userId:user?.id,userRole:user?.role,userRoleType:typeof user?.role,expectedRole:UserRole.SUPER_ADMIN,rolesMatch:user?.role === UserRole.SUPER_ADMIN},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    } catch(e) {}
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'super-admin.guard.ts:15',
+            message: 'SuperAdminGuard check',
+            data: {
+              hasUser: !!user,
+              userId: user?.id,
+              userRole: user?.role,
+              userRoleType: typeof user?.role,
+              expectedRole: UserRole.SUPER_ADMIN,
+              rolesMatch: user?.role === UserRole.SUPER_ADMIN,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
     // #endregion
 
     if (!user) {
@@ -29,8 +51,27 @@ export class SuperAdminGuard implements CanActivate {
     if (user.role !== UserRole.SUPER_ADMIN) {
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'super-admin.guard.ts:23',message:'SuperAdminGuard access denied',data:{userRole:user.role,expectedRole:UserRole.SUPER_ADMIN,roleComparison:user.role === UserRole.SUPER_ADMIN},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location: 'super-admin.guard.ts:23',
+              message: 'SuperAdminGuard access denied',
+              data: {
+                userRole: user.role,
+                expectedRole: UserRole.SUPER_ADMIN,
+                roleComparison: user.role === UserRole.SUPER_ADMIN,
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'E',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       // #endregion
       throw new ForbiddenException('Super admin access required');
     }

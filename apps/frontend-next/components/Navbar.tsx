@@ -55,6 +55,9 @@ export default function Navbar() {
               <Link href="/tasks/history" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 {t('nav.myTasks')}
               </Link>
+              <Link href="/messages" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                {t('nav.chat')}
+              </Link>
               {isAdmin && (
                 <Link href="/admin" className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   {t('nav.admin')}

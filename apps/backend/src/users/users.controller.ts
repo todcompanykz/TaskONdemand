@@ -1,4 +1,13 @@
-import { Controller, Get, Put, Post, UseGuards, Request, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Post,
+  UseGuards,
+  Request,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -67,10 +76,7 @@ export class UsersController {
   }
 
   @Post('me/fcm-token')
-  async updateFCMToken(
-    @Request() req,
-    @Body() updateDto: UpdateFCMTokenDto,
-  ) {
+  async updateFCMToken(@Request() req, @Body() updateDto: UpdateFCMTokenDto) {
     await this.usersService.updateFCMToken(req.user.id, updateDto.token);
     return { success: true };
   }

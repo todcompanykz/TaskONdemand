@@ -7,9 +7,7 @@ import { Task } from '../tasks/entities/task.entity';
 import { User } from '../users/entities/user.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Review, Task, User]),
-  ],
+  imports: [TypeOrmModule.forFeature([Review, Task, User])],
   controllers: [ReviewsController],
   providers: [ReviewsService],
   exports: [ReviewsService],

@@ -31,10 +31,8 @@ export class HealthController {
 
     return this.health.check([
       () => this.db.pingCheck('database'),
-      () =>
-        this.memory.checkHeap('memory_heap', 300 * 1024 * 1024), // 300MB
-      () =>
-        this.memory.checkRSS('memory_rss', 300 * 1024 * 1024), // 300MB
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024), // 300MB
+      () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024), // 300MB
       async (): Promise<HealthIndicatorResult> => {
         return {
           redis: {

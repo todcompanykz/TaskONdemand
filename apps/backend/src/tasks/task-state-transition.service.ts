@@ -1,17 +1,15 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Task, TaskStatus } from './entities/task.entity';
 import { TaskStateMachine } from './task-state-machine';
 import { FCMService } from '../notifications/fcm.service';
 
 /**
  * Centralized Task State Transition Service
- * 
+ *
  * ALL task status changes MUST go through this service.
  * This ensures:
  * - Consistent state transitions
@@ -32,10 +30,10 @@ export class TaskStateTransitionService {
 
   /**
    * Transition task to new status
-   * 
+   *
    * This is the ONLY method that should change task.status
    * All other services must use this method.
-   * 
+   *
    * @param taskId - Task ID
    * @param newStatus - Target status
    * @param userId - User performing the transition (for logging)
@@ -100,9 +98,14 @@ export class TaskStateTransitionService {
       });
 
       // Send FCM notification for status changes
-      this.sendStatusChangeNotification(savedTask, oldStatus, newStatus).catch((error) => {
-        this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
-      });
+      this.sendStatusChangeNotification(savedTask, oldStatus, newStatus).catch(
+        (error) => {
+          this.logger.error(
+            `Failed to send FCM notification for task ${taskId}:`,
+            error,
+          );
+        },
+      );
 
       return savedTask;
     });
@@ -111,20 +114,27 @@ export class TaskStateTransitionService {
   /**
    * Transition to CLAIMED status (special case with claimedBy)
    */
-  async transitionToClaimed(
-    taskId: string,
-    userId: string,
-  ): Promise<Task> {
+  async transitionToClaimed(taskId: string, userId: string): Promise<Task> {
     return await this.dataSource.transaction(async (manager) => {
       const taskRepository = manager.getRepository(Task);
 
       // #region agent log
       try {
-        const fs = require('fs');
-        const path = require('path');
-        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:114',message:'transitionToClaimed entry',data:{taskId,userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
-        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-      } catch(e) {}
+        const logEntry =
+          JSON.stringify({
+            location: 'task-state-transition.service.ts:114',
+            message: 'transitionToClaimed entry',
+            data: { taskId, userId },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+          }) + '\n';
+        fs.appendFileSync(
+          path.join(process.cwd(), '.cursor', 'debug.log'),
+          logEntry,
+        );
+      } catch (e) {}
       // #endregion
 
       // Lock task WITHOUT relations to avoid "FOR UPDATE on nullable side of outer join" error
@@ -137,11 +147,26 @@ export class TaskStateTransitionService {
 
       // #region agent log
       try {
-        const fs = require('fs');
-        const path = require('path');
-        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:119',message:'transitionToClaimed task found',data:{taskFound:!!task,taskStatus:task?.status,taskCreatedById:task?.createdById,taskClaimedById:task?.claimedById},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
-        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-      } catch(e) {}
+        const logEntry =
+          JSON.stringify({
+            location: 'task-state-transition.service.ts:119',
+            message: 'transitionToClaimed task found',
+            data: {
+              taskFound: !!task,
+              taskStatus: task?.status,
+              taskCreatedById: task?.createdById,
+              taskClaimedById: task?.claimedById,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+          }) + '\n';
+        fs.appendFileSync(
+          path.join(process.cwd(), '.cursor', 'debug.log'),
+          logEntry,
+        );
+      } catch (e) {}
       // #endregion
 
       if (!task) {
@@ -175,11 +200,25 @@ export class TaskStateTransitionService {
 
       // #region agent log
       try {
-        const fs = require('fs');
-        const path = require('path');
-        const logEntry = JSON.stringify({location:'task-state-transition.service.ts:150',message:'transitionToClaimed success',data:{taskId,taskStatus:savedTask.status,taskClaimedById:savedTask.claimedById},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})+'\n';
-        fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-      } catch(e) {}
+        const logEntry =
+          JSON.stringify({
+            location: 'task-state-transition.service.ts:150',
+            message: 'transitionToClaimed success',
+            data: {
+              taskId,
+              taskStatus: savedTask.status,
+              taskClaimedById: savedTask.claimedById,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'E',
+          }) + '\n';
+        fs.appendFileSync(
+          path.join(process.cwd(), '.cursor', 'debug.log'),
+          logEntry,
+        );
+      } catch (e) {}
       // #endregion
 
       // Structured logging
@@ -193,8 +232,15 @@ export class TaskStateTransitionService {
       });
 
       // Send FCM notification to task creator
-      this.sendStatusChangeNotification(savedTask, TaskStatus.CREATED, TaskStatus.CLAIMED).catch((error) => {
-        this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
+      this.sendStatusChangeNotification(
+        savedTask,
+        TaskStatus.CREATED,
+        TaskStatus.CLAIMED,
+      ).catch((error) => {
+        this.logger.error(
+          `Failed to send FCM notification for task ${taskId}:`,
+          error,
+        );
       });
 
       return savedTask;
@@ -248,8 +294,15 @@ export class TaskStateTransitionService {
         });
 
         // Send FCM notification to both creator and executor
-        this.sendStatusChangeNotification(task, TaskStatus.CLAIMED, TaskStatus.COMPLETED).catch((error) => {
-          this.logger.error(`Failed to send FCM notification for task ${taskId}:`, error);
+        this.sendStatusChangeNotification(
+          task,
+          TaskStatus.CLAIMED,
+          TaskStatus.COMPLETED,
+        ).catch((error) => {
+          this.logger.error(
+            `Failed to send FCM notification for task ${taskId}:`,
+            error,
+          );
         });
       }
 
@@ -265,13 +318,26 @@ export class TaskStateTransitionService {
     oldStatus: TaskStatus,
     newStatus: TaskStatus,
   ): Promise<void> {
-    const statusMessages: Record<TaskStatus, { title: string; body: string }> = {
-      [TaskStatus.CREATED]: { title: 'Новая задача', body: 'Задача создана' },
-      [TaskStatus.CLAIMED]: { title: 'Задача взята', body: 'Ваша задача была взята исполнителем' },
-      [TaskStatus.COMPLETED]: { title: 'Задача выполнена', body: 'Задача успешно завершена' },
-      [TaskStatus.CANCELLED]: { title: 'Задача отменена', body: 'Задача была отменена' },
-      [TaskStatus.EXPIRED]: { title: 'Задача истекла', body: 'Время выполнения задачи истекло' },
-    };
+    const statusMessages: Record<TaskStatus, { title: string; body: string }> =
+      {
+        [TaskStatus.CREATED]: { title: 'Новая задача', body: 'Задача создана' },
+        [TaskStatus.CLAIMED]: {
+          title: 'Задача взята',
+          body: 'Ваша задача была взята исполнителем',
+        },
+        [TaskStatus.COMPLETED]: {
+          title: 'Задача выполнена',
+          body: 'Задача успешно завершена',
+        },
+        [TaskStatus.CANCELLED]: {
+          title: 'Задача отменена',
+          body: 'Задача была отменена',
+        },
+        [TaskStatus.EXPIRED]: {
+          title: 'Задача истекла',
+          body: 'Время выполнения задачи истекло',
+        },
+      };
 
     const message = statusMessages[newStatus];
     if (!message) return;
@@ -282,7 +348,10 @@ export class TaskStateTransitionService {
     if (newStatus === TaskStatus.CLAIMED) {
       // Notify task creator
       if (task.createdById) recipients.push(task.createdById);
-    } else if (newStatus === TaskStatus.COMPLETED || newStatus === TaskStatus.CANCELLED) {
+    } else if (
+      newStatus === TaskStatus.COMPLETED ||
+      newStatus === TaskStatus.CANCELLED
+    ) {
       // Notify both creator and executor
       if (task.createdById) recipients.push(task.createdById);
       if (task.claimedById) recipients.push(task.claimedById);

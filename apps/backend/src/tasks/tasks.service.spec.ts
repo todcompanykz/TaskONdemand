@@ -5,12 +5,16 @@ import { TasksService } from './tasks.service';
 import { Task, TaskStatus } from './entities/task.entity';
 import { User } from '../users/entities/user.entity';
 import { RedisService } from '../redis/redis.service';
-import { NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 
 describe('TasksService - Atomic Claim Logic', () => {
   let service: TasksService;
   let taskRepository: jest.Mocked<Repository<Task>>;
-  let userRepository: jest.Mocked<Repository<User>>;
   let dataSource: jest.Mocked<DataSource>;
   let redisService: jest.Mocked<RedisService>;
 
@@ -37,7 +41,6 @@ describe('TasksService - Atomic Claim Logic', () => {
   };
 
   beforeEach(async () => {
-    const mockTransaction = jest.fn();
     const mockManager = {
       getRepository: jest.fn(),
     };
@@ -81,7 +84,6 @@ describe('TasksService - Atomic Claim Logic', () => {
 
     service = module.get<TasksService>(TasksService);
     taskRepository = module.get(getRepositoryToken(Task));
-    userRepository = module.get(getRepositoryToken(User));
     dataSource = module.get(DataSource);
     redisService = module.get(RedisService);
 

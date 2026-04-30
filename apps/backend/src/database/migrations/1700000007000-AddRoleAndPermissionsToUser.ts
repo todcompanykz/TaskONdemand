@@ -22,7 +22,10 @@ export class AddRoleAndPermissionsToUser1700000007000 implements MigrationInterf
       await queryRunner.addColumn('users', roleColumn);
     }
 
-    const permissionsExists = await queryRunner.hasColumn('users', 'permissions');
+    const permissionsExists = await queryRunner.hasColumn(
+      'users',
+      'permissions',
+    );
     if (!permissionsExists) {
       const permissionsColumn = new TableColumn({
         name: 'permissions',
@@ -34,14 +37,13 @@ export class AddRoleAndPermissionsToUser1700000007000 implements MigrationInterf
 
     // Migrate existing admins to SUPER_ADMIN
     // List of admin emails from old AdminGuard
-    const adminEmails = [
-      'admin@tod.kz',
-      'admin@example.com',
-    ];
+    const adminEmails = ['admin@tod.kz', 'admin@example.com'];
 
     // Update existing admins
     if (adminEmails.length > 0) {
-      const emailList = adminEmails.map(email => `'${email.toLowerCase()}'`).join(',');
+      const emailList = adminEmails
+        .map((email) => `'${email.toLowerCase()}'`)
+        .join(',');
       await queryRunner.query(`
         UPDATE "users"
         SET "role" = 'SUPER_ADMIN'
@@ -59,13 +61,16 @@ export class AddRoleAndPermissionsToUser1700000007000 implements MigrationInterf
       )
       AND "role" = 'USER'
     `);
-    
+
     // Note: SUPER_ADMIN_EMAIL from environment should be set manually
     // or through a separate migration script if needed
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    const permissionsExists = await queryRunner.hasColumn('users', 'permissions');
+    const permissionsExists = await queryRunner.hasColumn(
+      'users',
+      'permissions',
+    );
     if (permissionsExists) {
       await queryRunner.dropColumn('users', 'permissions');
     }

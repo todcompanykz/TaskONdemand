@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { I18nProvider } from '@/contexts/I18nContext'
@@ -9,9 +10,15 @@ import ToastContainer from '@/components/ToastContainer'
 import NotificationChecker from '@/components/NotificationChecker'
 import NavigationWrapper from '@/components/NavigationWrapper'
 import FCMProvider from '@/components/FCMProvider'
-import InstallPrompt from '@/components/InstallPrompt'
 import HideAddressBar from '@/components/HideAddressBar'
 import PageTransition from '@/components/PageTransition'
+
+const InstallPrompt = dynamic(() => import('@/components/InstallPrompt'), {
+  ssr: false,
+})
+const AiAssistantWidget = dynamic(() => import('@/components/AiAssistantWidget'), {
+  ssr: false,
+})
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -29,6 +36,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                   </PageTransition>
                 </main>
                 <NotificationChecker />
+                <AiAssistantWidget />
                 <ToastContainer />
                 <InstallPrompt />
               </FCMProvider>

@@ -6,13 +6,15 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Task, TaskStatus, TaskUrgency } from './entities/task.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStateTransitionService } from './task-state-transition.service';
 import { RateLimitService } from './services/rate-limit.service';
 import { TelegramNotificationsService } from '../notifications/telegram-notifications.service';
+import { ParseTaskResponseDto } from './dto/parse-task-response.dto';
+import { OpenAiService } from '../ai/openai.service';
 
 @Injectable()
 export class TasksService {
@@ -27,6 +29,7 @@ export class TasksService {
     private stateTransitionService: TaskStateTransitionService,
     private rateLimitService: RateLimitService,
     private telegramNotificationsService: TelegramNotificationsService,
+    private openAiService: OpenAiService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: string): Promise<Task> {
@@ -93,10 +96,66 @@ export class TasksService {
     return savedTask;
   }
 
-  async getFeed(
-    city: string,
+  async parseTaskDraft(
+    freeText: string,
     userId: string,
-  ): Promise<Task[]> {
+  ): Promise<ParseTaskResponseDto> {
+    try {
+      const parseResult =
+        await this.openAiService.parseTaskFromFreeTextWithMeta(freeText);
+      const draft = parseResult.draft;
+
+      this.logger.log({
+        event: 'task_draft_parsed',
+        userId,
+        source: parseResult.source,
+        provider: parseResult.provider,
+        errorCategory: parseResult.errorCategory,
+        needsUserClarification: draft.needsUserClarification,
+        timestamp: new Date().toISOString(),
+      });
+
+      return draft;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn({
+        event: 'task_draft_parse_failed',
+        userId,
+        source: 'fallback_local',
+        provider: 'unknown',
+        errorCategory: 'unexpected_error',
+        error: message,
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        return this.openAiService.parseTaskFallbackFromText(freeText);
+      } catch {
+        return this.buildFallbackDraft(freeText);
+      }
+    }
+  }
+
+  private buildFallbackDraft(freeText: string): ParseTaskResponseDto {
+    const cleaned = freeText.trim().replace(/\s+/g, ' ');
+    const shortDescription = cleaned ? cleaned.slice(0, 100) : 'Новая задача';
+    const fullDescription = cleaned || 'Клиент не указал подробности';
+
+    return {
+      shortDescription,
+      fullDescription,
+      city: 'Астана',
+      address: 'Требуется уточнение',
+      urgency: TaskUrgency.MEDIUM,
+      needsUserClarification: true,
+      clarificationQuestion:
+        'Пожалуйста, дополните вручную: адрес, время, награду.',
+      missingFields: ['address', 'time', 'reward'],
+      canSubmit: false,
+    };
+  }
+
+  async getFeed(city: string, userId: string): Promise<Task[]> {
     // Default to 'Астана' if city not provided
     const selectedCity = city || 'Астана';
 
@@ -130,10 +189,7 @@ export class TasksService {
 
     // If task is claimed, only creator and claimer can see it
     if (task.status === TaskStatus.CLAIMED && userId) {
-      if (
-        task.createdById !== userId &&
-        task.claimedById !== userId
-      ) {
+      if (task.createdById !== userId && task.claimedById !== userId) {
         throw new ForbiddenException('You do not have access to this task');
       }
     }
@@ -220,16 +276,20 @@ export class TasksService {
       throw new ForbiddenException('Only the task creator can cancel');
     }
 
-    if (task.status !== TaskStatus.CREATED && task.status !== TaskStatus.CLAIMED) {
-      throw new BadRequestException('Task can only be cancelled from created or claimed status');
+    if (
+      task.status !== TaskStatus.CREATED &&
+      task.status !== TaskStatus.CLAIMED
+    ) {
+      throw new BadRequestException(
+        'Task can only be cancelled from created or claimed status',
+      );
     }
 
     // Apply cancel limit only when creator cancels already claimed task.
     // Cancelling a not-yet-claimed task should not penalize the creator.
     if (task.status === TaskStatus.CLAIMED) {
-      const limitExceeded = await this.rateLimitService.checkAndIncrementCancel(
-        userId,
-      );
+      const limitExceeded =
+        await this.rateLimitService.checkAndIncrementCancel(userId);
       if (limitExceeded) {
         throw new ForbiddenException(
           'You have exceeded the cancel limit. Claiming is blocked for 24 hours.',
@@ -242,7 +302,9 @@ export class TasksService {
       taskId,
       TaskStatus.CANCELLED,
       userId,
-      task.status === TaskStatus.CLAIMED ? 'creator_cancelled_claimed' : 'creator_cancelled_created',
+      task.status === TaskStatus.CLAIMED
+        ? 'creator_cancelled_claimed'
+        : 'creator_cancelled_created',
     );
 
     this.logger.log({
@@ -256,7 +318,10 @@ export class TasksService {
     return cancelledTask;
   }
 
-  async deleteOwnTask(taskId: string, userId: string): Promise<{ success: true }> {
+  async deleteOwnTask(
+    taskId: string,
+    userId: string,
+  ): Promise<{ success: true }> {
     const task = await this.tasksRepository.findOne({
       where: { id: taskId },
     });
@@ -266,11 +331,18 @@ export class TasksService {
     }
 
     if (task.createdById !== userId) {
-      throw new ForbiddenException('Only the task creator can delete this task');
+      throw new ForbiddenException(
+        'Only the task creator can delete this task',
+      );
     }
 
-    if (task.status === TaskStatus.CLAIMED || task.status === TaskStatus.COMPLETED) {
-      throw new BadRequestException('Claimed or completed tasks cannot be deleted');
+    if (
+      task.status === TaskStatus.CLAIMED ||
+      task.status === TaskStatus.COMPLETED
+    ) {
+      throw new BadRequestException(
+        'Claimed or completed tasks cannot be deleted',
+      );
     }
 
     await this.tasksRepository.delete(task.id);
@@ -288,9 +360,8 @@ export class TasksService {
 
   async refuseTask(taskId: string, userId: string): Promise<Task> {
     // Check rate limit
-    const limitExceeded = await this.rateLimitService.checkAndIncrementRefuse(
-      userId,
-    );
+    const limitExceeded =
+      await this.rateLimitService.checkAndIncrementRefuse(userId);
     if (limitExceeded) {
       throw new ForbiddenException(
         'You have exceeded the refuse limit. Claiming is blocked for 24 hours.',
@@ -342,7 +413,9 @@ export class TasksService {
 
     // Only creator can confirm work completed
     if (task.createdById !== userId) {
-      throw new ForbiddenException('Only the task creator can confirm completion');
+      throw new ForbiddenException(
+        'Only the task creator can confirm completion',
+      );
     }
 
     if (task.status !== TaskStatus.CLAIMED) {
@@ -385,7 +458,9 @@ export class TasksService {
 
     // Only executor (claimer) can confirm payment received
     if (task.claimedById !== userId) {
-      throw new ForbiddenException('Only the task executor can confirm payment');
+      throw new ForbiddenException(
+        'Only the task executor can confirm payment',
+      );
     }
 
     if (task.status !== TaskStatus.CLAIMED) {
@@ -438,10 +513,10 @@ export class TasksService {
 
   /**
    * Mark expired tasks (called by background job)
-   * 
+   *
    * This method is called periodically to mark tasks as expired.
    * It should only be called by the scheduled job.
-   * 
+   *
    * Uses centralized state transition service to ensure consistency.
    */
   async expireTasks(): Promise<number> {

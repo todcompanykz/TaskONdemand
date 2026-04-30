@@ -12,7 +12,7 @@ async function bootstrap() {
 
     await dataSource.initialize();
 
-    const migrations = await dataSource.runMigrations();
+    await dataSource.runMigrations();
 
     // Sanity check: ensure critical columns exist after migrations.
     // If migrations weren't discovered/executed, the next query will fail with an unhelpful "column does not exist".
@@ -75,7 +75,7 @@ async function bootstrap() {
       if (!origin) {
         return callback(null, true);
       }
-      
+
       // Allow localhost and any IP in local network (192.168.x.x, 10.x.x.x, etc.)
       const allowedPatterns = [
         /^http:\/\/localhost(:\d+)?$/,
@@ -84,9 +84,9 @@ async function bootstrap() {
         /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/,
         /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/,
       ];
-      
-      const isAllowed = allowedPatterns.some(pattern => pattern.test(origin));
-      
+
+      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
+
       if (isAllowed) {
         callback(null, true);
       } else {

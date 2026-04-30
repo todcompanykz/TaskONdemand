@@ -9,7 +9,6 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { SupportConversation } from './support-conversation.entity';
-import { UserRole } from '../../common/enums/user-role.enum';
 
 export enum MessageSenderRole {
   USER = 'USER',
@@ -27,9 +26,13 @@ export class SupportMessage {
   @Column({ type: 'uuid' })
   conversationId: string;
 
-  @ManyToOne(() => SupportConversation, (conversation) => conversation.messages, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    () => SupportConversation,
+    (conversation) => conversation.messages,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'conversationId' })
   conversation: SupportConversation;
 

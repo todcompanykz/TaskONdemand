@@ -22,17 +22,20 @@ export class AddSupportReplyFields1700000005000 implements MigrationInterface {
           CONSTRAINT "FK_support_requests_userId" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE
         )
       `);
-      
+
       await queryRunner.query(`
         CREATE INDEX IF NOT EXISTS "IDX_support_requests_userId" ON "support_requests" ("userId")
       `);
-      
+
       // If table was just created, columns already exist, so return early
       return;
     }
 
     // Add status column (only if it doesn't exist)
-    const hasStatusColumn = await queryRunner.hasColumn('support_requests', 'status');
+    const hasStatusColumn = await queryRunner.hasColumn(
+      'support_requests',
+      'status',
+    );
     if (!hasStatusColumn) {
       const statusColumn = new TableColumn({
         name: 'status',
@@ -44,7 +47,10 @@ export class AddSupportReplyFields1700000005000 implements MigrationInterface {
     }
 
     // Add responseMessage column (only if it doesn't exist)
-    const hasResponseMessageColumn = await queryRunner.hasColumn('support_requests', 'responseMessage');
+    const hasResponseMessageColumn = await queryRunner.hasColumn(
+      'support_requests',
+      'responseMessage',
+    );
     if (!hasResponseMessageColumn) {
       const responseMessageColumn = new TableColumn({
         name: 'responseMessage',
@@ -55,7 +61,10 @@ export class AddSupportReplyFields1700000005000 implements MigrationInterface {
     }
 
     // Add answeredAt column (only if it doesn't exist)
-    const hasAnsweredAtColumn = await queryRunner.hasColumn('support_requests', 'answeredAt');
+    const hasAnsweredAtColumn = await queryRunner.hasColumn(
+      'support_requests',
+      'answeredAt',
+    );
     if (!hasAnsweredAtColumn) {
       const answeredAtColumn = new TableColumn({
         name: 'answeredAt',
@@ -66,7 +75,10 @@ export class AddSupportReplyFields1700000005000 implements MigrationInterface {
     }
 
     // Add respondedByAdminId column (only if it doesn't exist)
-    const hasRespondedByAdminIdColumn = await queryRunner.hasColumn('support_requests', 'respondedByAdminId');
+    const hasRespondedByAdminIdColumn = await queryRunner.hasColumn(
+      'support_requests',
+      'respondedByAdminId',
+    );
     if (!hasRespondedByAdminIdColumn) {
       const respondedByAdminIdColumn = new TableColumn({
         name: 'respondedByAdminId',

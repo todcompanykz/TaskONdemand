@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ClaimBlockGuard } from './guards/claim-block.guard';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { ClaimTaskDto } from './dto/claim-task.dto';
+import { ParseTaskRequestDto } from './dto/parse-task-request.dto';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
@@ -25,15 +26,20 @@ export class TasksController {
     return this.tasksService.create(createTaskDto, req.user.id);
   }
 
-  @Get('feed')
-  async getFeed(
+  @Post('parse')
+  async parseTaskDraft(
+    @Body() parseTaskRequestDto: ParseTaskRequestDto,
     @Request() req,
-    @Query('city') city?: string,
   ) {
-    return this.tasksService.getFeed(
-      city || 'Астана',
+    return this.tasksService.parseTaskDraft(
+      parseTaskRequestDto.freeText,
       req.user.id,
     );
+  }
+
+  @Get('feed')
+  async getFeed(@Request() req, @Query('city') city?: string) {
+    return this.tasksService.getFeed(city || 'Астана', req.user.id);
   }
 
   @Get('history')

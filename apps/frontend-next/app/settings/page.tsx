@@ -10,6 +10,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 import ThemeToggle from '@/components/ThemeToggle'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ShieldCheckIcon } from '@heroicons/react/24/outline'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -237,6 +238,19 @@ export default function SettingsPage() {
           </div>
 
           {/* Support Chat Section */}
+          <Link
+            href="/messages"
+            className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheckIcon className="w-5 h-5 text-primary dark:text-primary-light" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Безопасность общения
+              </span>
+            </div>
+            <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+          </Link>
+
           <Link
             href="/support"
             className="flex items-center justify-between px-4 py-4 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"

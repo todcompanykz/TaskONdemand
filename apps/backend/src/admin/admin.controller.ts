@@ -106,10 +106,27 @@ export class AdminController {
   ) {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin.controller.ts:getSupportConversations:entry',message:'getSupportConversations endpoint called',data:{userId:req.user.id,status,priority},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
-    } catch(e) {}
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'admin.controller.ts:getSupportConversations:entry',
+            message: 'getSupportConversations endpoint called',
+            data: { userId: req.user.id, status, priority },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'M',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
     const logger = new Logger(AdminController.name);
-    logger.log(`[DEBUG] getSupportConversations called: userId=${req.user.id}, status=${status}, priority=${priority}`);
+    logger.log(
+      `[DEBUG] getSupportConversations called: userId=${req.user.id}, status=${status}, priority=${priority}`,
+    );
     // #endregion
     const result = await this.supportService.getAdminConversations({
       status: status as any,
@@ -117,9 +134,29 @@ export class AdminController {
     });
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin.controller.ts:getSupportConversations:result',message:'getSupportConversations returning',data:{count:result.length,conversationIds:result.map(c => c.id)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'M'})}).catch(()=>{});
-    } catch(e) {}
-    logger.log(`[DEBUG] getSupportConversations returning ${result.length} conversations`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'admin.controller.ts:getSupportConversations:result',
+            message: 'getSupportConversations returning',
+            data: {
+              count: result.length,
+              conversationIds: result.map((c) => c.id),
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'M',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    logger.log(
+      `[DEBUG] getSupportConversations returning ${result.length} conversations`,
+    );
     // #endregion
     return result;
   }

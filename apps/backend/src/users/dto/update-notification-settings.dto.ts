@@ -55,4 +55,8 @@ export class UpdateNotificationSettingsDto {
   @IsOptional()
   @IsBoolean()
   supportReplies?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  requireChatRequestApproval?: boolean;
 }

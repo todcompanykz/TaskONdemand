@@ -415,6 +415,28 @@ export default function NotificationSettingsPage() {
             </div>
           </div>
 
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
+              Безопасность общения
+            </h2>
+            <div className="flex items-center justify-between py-3">
+              <div className="flex-1 pr-4">
+                <p className="font-medium text-gray-900 dark:text-gray-50">
+                  Подтверждение новых диалогов
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Спрашивать разрешение перед началом чата с незнакомыми пользователями.
+                </p>
+              </div>
+              <ToggleSwitch
+                checked={settings.requireChatRequestApproval}
+                onChange={(checked) =>
+                  handleToggle('requireChatRequestApproval', checked)
+                }
+              />
+            </div>
+          </div>
+
           <div className="flex justify-end">
             <button
               type="button"

@@ -146,6 +146,20 @@ export interface CreateTaskDto {
   photoUrls?: string[]
 }
 
+export interface ParseTaskDraftDto {
+  shortDescription: string
+  fullDescription: string
+  city: string
+  address: string
+  urgency: 'low' | 'medium' | 'high'
+  rewardSuggestion?: number
+  needsUserClarification: boolean
+  clarificationQuestion?: string
+  missingFields?: string[]
+  canSubmit?: boolean
+  rewriteQualityNote?: string
+}
+
 export const authApi = {
   register: async (email: string, firstName: string, lastName: string, password: string, confirmPassword: string, phoneNumber?: string) => {
     const { data } = await api.post('/auth/register', { email, firstName, lastName, password, confirmPassword, phoneNumber })
@@ -170,6 +184,10 @@ export const tasksApi = {
   },
   create: async (task: CreateTaskDto) => {
     const { data } = await api.post('/tasks', task)
+    return data
+  },
+  parseDraft: async (freeText: string): Promise<ParseTaskDraftDto> => {
+    const { data } = await api.post('/tasks/parse', { freeText })
     return data
   },
   claim: async (taskId: string) => {
@@ -225,6 +243,7 @@ export interface NotificationSettings {
   taskComments: boolean
   executorAssigned: boolean
   supportReplies: boolean
+  requireChatRequestApproval: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -243,6 +262,7 @@ export interface UpdateNotificationSettingsData {
   taskComments?: boolean
   executorAssigned?: boolean
   supportReplies?: boolean
+  requireChatRequestApproval?: boolean
 }
 
 export const usersApi = {
@@ -458,6 +478,77 @@ export const supportApi = {
   },
   sendMessage: async (conversationId: string, message: string): Promise<SupportMessage> => {
     const { data } = await api.post('/support/messages', { conversationId, message })
+    return data
+  },
+}
+
+export interface ChatUserPreview {
+  id: string
+  firstName?: string
+  lastName?: string
+  email: string
+  phoneNumber?: string
+}
+
+export interface ChatMessage {
+  id: string
+  conversationId: string
+  senderId: string
+  message: string
+  recipientReadAt?: string | null
+  createdAt: string
+}
+
+export interface ChatConversation {
+  id: string
+  userAId: string
+  userBId: string
+  requestedById: string
+  status: 'pending' | 'active' | 'declined'
+  declinedById?: string | null
+  lastMessagePreview?: string | null
+  lastMessageAt?: string | null
+  createdAt: string
+  updatedAt: string
+  otherUser: ChatUserPreview | null
+  isIncomingRequest: boolean
+  unreadCount: number
+  messages?: ChatMessage[]
+}
+
+export const chatApi = {
+  searchUser: async (query: string): Promise<ChatUserPreview | null> => {
+    const { data } = await api.get('/chat/search', { params: { query } })
+    return data
+  },
+  createRequest: async (userId: string, message: string): Promise<ChatConversation> => {
+    const { data } = await api.post('/chat/requests', { userId, message })
+    return data
+  },
+  getConversations: async (): Promise<ChatConversation[]> => {
+    const { data } = await api.get('/chat/conversations')
+    return data
+  },
+  getConversation: async (id: string, markAsRead = false): Promise<ChatConversation> => {
+    const { data } = await api.get(`/chat/conversations/${id}`, {
+      params: { markAsRead },
+    })
+    return data
+  },
+  sendMessage: async (conversationId: string, message: string): Promise<ChatConversation> => {
+    const { data } = await api.post('/chat/messages', { conversationId, message })
+    return data
+  },
+  acceptRequest: async (conversationId: string): Promise<ChatConversation> => {
+    const { data } = await api.post(`/chat/conversations/${conversationId}/accept`)
+    return data
+  },
+  declineRequest: async (conversationId: string): Promise<ChatConversation> => {
+    const { data } = await api.post(`/chat/conversations/${conversationId}/decline`)
+    return data
+  },
+  blockUser: async (conversationId: string): Promise<{ success: boolean }> => {
+    const { data } = await api.post(`/chat/conversations/${conversationId}/block`)
     return data
   },
 }

@@ -10,12 +10,14 @@ import { RateLimitService } from './services/rate-limit.service';
 import { ClaimBlockGuard } from './guards/claim-block.guard';
 import { TasksScheduler } from './tasks.scheduler';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Task, User]),
     RedisModule,
     NotificationsModule,
+    AiModule,
   ],
   controllers: [TasksController],
   providers: [

@@ -5,7 +5,6 @@ import {
   Min,
   MaxLength,
   Validate,
-  ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
   IsOptional,
@@ -16,11 +15,11 @@ import { TaskUrgency } from '../entities/task.entity';
 
 @ValidatorConstraint({ name: 'isDivisibleBy5', async: false })
 export class IsDivisibleBy5Constraint implements ValidatorConstraintInterface {
-  validate(value: number, args: ValidationArguments) {
+  validate(value: number) {
     return value % 5 === 0;
   }
 
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage() {
     return 'Reward must be divisible by 5';
   }
 }

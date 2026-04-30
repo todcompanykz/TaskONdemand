@@ -4,7 +4,7 @@ import { TasksService } from './tasks.service';
 
 /**
  * Background job scheduler for task expiration
- * 
+ *
  * Runs every 5 minutes to mark expired tasks.
  * Tasks expire 24 hours after creation.
  */

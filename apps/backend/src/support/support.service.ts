@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
+import * as fs from 'fs';
 import { CreateSupportRequestDto } from './dto/create-support-request.dto';
 import { ReplySupportRequestDto } from './dto/reply-support-request.dto';
 import { CreateConversationDto } from './dto/create-conversation.dto';
@@ -45,9 +46,30 @@ export class SupportService {
   async createSupportRequest(userId: string, dto: CreateSupportRequestDto) {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:createSupportRequest:entry',message:'createSupportRequest called',data:{userId,topic:dto.topic,messageLength:dto.message.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] createSupportRequest called: userId=${userId}, topic=${dto.topic}`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:createSupportRequest:entry',
+            message: 'createSupportRequest called',
+            data: {
+              userId,
+              topic: dto.topic,
+              messageLength: dto.message.length,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'F',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] createSupportRequest called: userId=${userId}, topic=${dto.topic}`,
+    );
     // #endregion
     // Store support request in database
     const supportRequest = this.supportRequestRepository.create({
@@ -59,8 +81,28 @@ export class SupportService {
     const saved = await this.supportRequestRepository.save(supportRequest);
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:createSupportRequest:saved',message:'support request saved',data:{id:saved.id,userId:saved.userId,topic:saved.topic,createdAt:saved.createdAt},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    } catch(e) {}
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:createSupportRequest:saved',
+            message: 'support request saved',
+            data: {
+              id: saved.id,
+              userId: saved.userId,
+              topic: saved.topic,
+              createdAt: saved.createdAt,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'F',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
     this.logger.log(`[DEBUG] Support request saved: id=${saved.id}`);
     // #endregion
 
@@ -83,9 +125,17 @@ export class SupportService {
 
   async getAllSupportRequests() {
     // #region agent log
-    const fs = require('fs');
     const logPath = 'c:\\Cursorproject\\Todmvp\\.cursor\\debug.log';
-    const logEntry = JSON.stringify({location:'support.service.ts:getAllSupportRequests:entry',message:'getAllSupportRequests called',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})+'\n';
+    const logEntry =
+      JSON.stringify({
+        location: 'support.service.ts:getAllSupportRequests:entry',
+        message: 'getAllSupportRequests called',
+        data: {},
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'G',
+      }) + '\n';
     fs.appendFileSync(logPath, logEntry);
     // #endregion
     const requests = await this.supportRequestRepository.find({
@@ -93,7 +143,24 @@ export class SupportService {
       order: { createdAt: 'DESC' },
     });
     // #region agent log
-    const logEntry2 = JSON.stringify({location:'support.service.ts:getAllSupportRequests:result',message:'getAllSupportRequests result',data:{count:requests.length,requests:requests.map(r=>({id:r.id,userId:r.userId,topic:r.topic,hasUser:!!r.user}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})+'\n';
+    const logEntry2 =
+      JSON.stringify({
+        location: 'support.service.ts:getAllSupportRequests:result',
+        message: 'getAllSupportRequests result',
+        data: {
+          count: requests.length,
+          requests: requests.map((r) => ({
+            id: r.id,
+            userId: r.userId,
+            topic: r.topic,
+            hasUser: !!r.user,
+          })),
+        },
+        timestamp: Date.now(),
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'G',
+      }) + '\n';
     fs.appendFileSync(logPath, logEntry2);
     // #endregion
     return requests;
@@ -122,7 +189,9 @@ export class SupportService {
     }
 
     if (request.status !== 'open') {
-      throw new BadRequestException('Support request has already been answered');
+      throw new BadRequestException(
+        'Support request has already been answered',
+      );
     }
 
     request.status = 'answered';
@@ -140,17 +209,22 @@ export class SupportService {
     });
 
     // Send FCM notification to user
-    this.fcmService.sendNotification(saved.userId, {
-      title: 'Ответ от поддержки',
-      body: `Получен ответ на ваш запрос: "${saved.topic}"`,
-      data: {
-        id: `support_reply_${saved.id}`,
-        type: 'support_reply',
-        actionUrl: '/support/my-requests',
-      },
-    }).catch((error) => {
-      this.logger.error(`Failed to send FCM notification to user ${saved.userId}:`, error);
-    });
+    this.fcmService
+      .sendNotification(saved.userId, {
+        title: 'Ответ от поддержки',
+        body: `Получен ответ на ваш запрос: "${saved.topic}"`,
+        data: {
+          id: `support_reply_${saved.id}`,
+          type: 'support_reply',
+          actionUrl: '/support/my-requests',
+        },
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Failed to send FCM notification to user ${saved.userId}:`,
+          error,
+        );
+      });
 
     return this.supportRequestRepository.findOne({
       where: { id: saved.id },
@@ -169,9 +243,30 @@ export class SupportService {
   ): Promise<SupportConversation> {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:createConversation:entry',message:'createConversation called',data:{userId,topic:dto.topic,messageLength:dto.message.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] createConversation called: userId=${userId}, topic=${dto.topic}`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:createConversation:entry',
+            message: 'createConversation called',
+            data: {
+              userId,
+              topic: dto.topic,
+              messageLength: dto.message.length,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] createConversation called: userId=${userId}, topic=${dto.topic}`,
+    );
     // #endregion
 
     const conversation = this.conversationRepository.create({
@@ -182,12 +277,31 @@ export class SupportService {
       lastMessageAt: new Date(),
     });
 
-    const savedConversation = await this.conversationRepository.save(conversation);
+    const savedConversation =
+      await this.conversationRepository.save(conversation);
 
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:createConversation:conversationSaved',message:'conversation saved',data:{conversationId:savedConversation.id,userId:savedConversation.userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    } catch(e) {}
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:createConversation:conversationSaved',
+            message: 'conversation saved',
+            data: {
+              conversationId: savedConversation.id,
+              userId: savedConversation.userId,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
     this.logger.log(`[DEBUG] Conversation saved: id=${savedConversation.id}`);
     // #endregion
 
@@ -204,8 +318,26 @@ export class SupportService {
 
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:createConversation:messageSaved',message:'message saved',data:{messageId:message.id,conversationId:savedConversation.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    } catch(e) {}
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:createConversation:messageSaved',
+            message: 'message saved',
+            data: {
+              messageId: message.id,
+              conversationId: savedConversation.id,
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
     this.logger.log(`[DEBUG] Message saved: id=${message.id}`);
     // #endregion
 
@@ -294,7 +426,9 @@ export class SupportService {
       senderRole === MessageSenderRole.USER &&
       conversation.status === ConversationStatus.CLOSED
     ) {
-      throw new BadRequestException('Cannot send message to closed conversation');
+      throw new BadRequestException(
+        'Cannot send message to closed conversation',
+      );
     }
 
     // Check access for users
@@ -325,7 +459,7 @@ export class SupportService {
       await this.notifyUserAboutMessage(conversation.userId, conversationId);
     } else {
       // Notify admins about user's message
-      await this.notifyAdminsAboutNewMessage(conversationId, conversation.userId);
+      await this.notifyAdminsAboutNewMessage(conversationId);
     }
 
     this.logger.log({
@@ -384,9 +518,26 @@ export class SupportService {
   }): Promise<SupportConversation[]> {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:getAdminConversations:entry',message:'getAdminConversations called',data:{filters},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] getAdminConversations called with filters: ${JSON.stringify(filters)}`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:getAdminConversations:entry',
+            message: 'getAdminConversations called',
+            data: { filters },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'J',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] getAdminConversations called with filters: ${JSON.stringify(filters)}`,
+    );
     // #endregion
 
     const where: any = {};
@@ -407,9 +558,29 @@ export class SupportService {
 
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:getAdminConversations:result',message:'getAdminConversations returning',data:{count:conversations.length,conversationIds:conversations.map(c => c.id)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] getAdminConversations returning ${conversations.length} conversations`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'support.service.ts:getAdminConversations:result',
+            message: 'getAdminConversations returning',
+            data: {
+              count: conversations.length,
+              conversationIds: conversations.map((c) => c.id),
+            },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'J',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] getAdminConversations returning ${conversations.length} conversations`,
+    );
     // #endregion
 
     return conversations;
@@ -521,10 +692,12 @@ export class SupportService {
     conversationId: string,
   ): Promise<void> {
     try {
-      const user = await this.userRepository.findOne({
-        where: { id: userId },
-        relations: ['notificationSettings'],
-      }).catch(() => null);
+      const user = await this.userRepository
+        .findOne({
+          where: { id: userId },
+          relations: ['notificationSettings'],
+        })
+        .catch(() => null);
 
       if (
         user?.notificationSettings &&
@@ -552,13 +725,14 @@ export class SupportService {
 
   private async notifyAdminsAboutNewMessage(
     conversationId: string,
-    userId: string,
   ): Promise<void> {
     try {
       const admins = await this.userRepository
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.notificationSettings', 'notificationSettings')
-        .where('user.role IN (:...roles)', { roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+        .where('user.role IN (:...roles)', {
+          roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        })
         .getMany();
 
       for (const admin of admins) {
@@ -588,30 +762,90 @@ export class SupportService {
   ): Promise<void> {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:entry',message:'notifyAdminsAboutNewConversation called',data:{conversationId,userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] notifyAdminsAboutNewConversation called: conversationId=${conversationId}, userId=${userId}`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location:
+              'support.service.ts:notifyAdminsAboutNewConversation:entry',
+            message: 'notifyAdminsAboutNewConversation called',
+            data: { conversationId, userId },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'A',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] notifyAdminsAboutNewConversation called: conversationId=${conversationId}, userId=${userId}`,
+    );
     // #endregion
-    
+
     try {
       const admins = await this.userRepository
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.notificationSettings', 'notificationSettings')
-        .where('user.role IN (:...roles)', { roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+        .where('user.role IN (:...roles)', {
+          roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        })
         .getMany();
 
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:adminsFound',message:'admins found',data:{adminCount:admins.length,admins:admins.map(a=>({id:a.id,email:a.email,role:a.role,hasFcmToken:!!a.fcmToken}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewConversation:adminsFound',
+              message: 'admins found',
+              data: {
+                adminCount: admins.length,
+                admins: admins.map((a) => ({
+                  id: a.id,
+                  email: a.email,
+                  role: a.role,
+                  hasFcmToken: !!a.fcmToken,
+                })),
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'A',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       this.logger.log(`[DEBUG] Found ${admins.length} admins to notify`);
       // #endregion
 
       if (admins.length === 0) {
         // #region agent log
         try {
-          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:noAdmins',message:'no admins found',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        } catch(e) {}
+          fetch(
+            'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                location:
+                  'support.service.ts:notifyAdminsAboutNewConversation:noAdmins',
+                message: 'no admins found',
+                data: {},
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'B',
+              }),
+            },
+          ).catch(() => {});
+        } catch (e) {}
         // #endregion
         this.logger.warn('No admins found to notify about new conversation');
         return;
@@ -622,22 +856,64 @@ export class SupportService {
 
       for (const admin of admins) {
         const settings = (admin as any).notificationSettings;
-        
+
         // #region agent log
         try {
-          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:processingAdmin',message:'processing admin',data:{adminId:admin.id,adminEmail:admin.email,hasSettings:!!settings,supportRepliesEnabled:settings?.supportReplies !== false,hasFcmToken:!!admin.fcmToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        } catch(e) {}
-        this.logger.log(`[DEBUG] Processing admin: ${admin.email}, hasFcmToken: ${!!admin.fcmToken}, supportReplies: ${settings?.supportReplies !== false}`);
+          fetch(
+            'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                location:
+                  'support.service.ts:notifyAdminsAboutNewConversation:processingAdmin',
+                message: 'processing admin',
+                data: {
+                  adminId: admin.id,
+                  adminEmail: admin.email,
+                  hasSettings: !!settings,
+                  supportRepliesEnabled: settings?.supportReplies !== false,
+                  hasFcmToken: !!admin.fcmToken,
+                },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'C',
+              }),
+            },
+          ).catch(() => {});
+        } catch (e) {}
+        this.logger.log(
+          `[DEBUG] Processing admin: ${admin.email}, hasFcmToken: ${!!admin.fcmToken}, supportReplies: ${settings?.supportReplies !== false}`,
+        );
         // #endregion
-        
+
         if (settings && !settings.supportReplies) {
           skippedCount++;
           // #region agent log
           try {
-            fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:skipped',message:'admin skipped - notifications disabled',data:{adminId:admin.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-          } catch(e) {}
+            fetch(
+              'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  location:
+                    'support.service.ts:notifyAdminsAboutNewConversation:skipped',
+                  message: 'admin skipped - notifications disabled',
+                  data: { adminId: admin.id },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'C',
+                }),
+              },
+            ).catch(() => {});
+          } catch (e) {}
           // #endregion
-          this.logger.log(`[DEBUG] Skipped admin ${admin.email}: notifications disabled`);
+          this.logger.log(
+            `[DEBUG] Skipped admin ${admin.email}: notifications disabled`,
+          );
           continue;
         }
 
@@ -645,28 +921,65 @@ export class SupportService {
           skippedCount++;
           // #region agent log
           try {
-            fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:skipped',message:'admin skipped - no FCM token',data:{adminId:admin.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-          } catch(e) {}
+            fetch(
+              'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  location:
+                    'support.service.ts:notifyAdminsAboutNewConversation:skipped',
+                  message: 'admin skipped - no FCM token',
+                  data: { adminId: admin.id },
+                  timestamp: Date.now(),
+                  sessionId: 'debug-session',
+                  runId: 'run1',
+                  hypothesisId: 'D',
+                }),
+              },
+            ).catch(() => {});
+          } catch (e) {}
           // #endregion
           this.logger.log(`[DEBUG] Skipped admin ${admin.email}: no FCM token`);
           continue;
         }
 
-        const notificationResult = await this.fcmService.sendNotification(admin.id, {
-          title: 'Новое обращение в поддержку',
-          body: 'Создано новое обращение от пользователя',
-          data: {
-            id: `support_conversation_${conversationId}`,
-            type: 'support_message',
-            actionUrl: `/admin?tab=support&conversation=${conversationId}`,
+        const notificationResult = await this.fcmService.sendNotification(
+          admin.id,
+          {
+            title: 'Новое обращение в поддержку',
+            body: 'Создано новое обращение от пользователя',
+            data: {
+              id: `support_conversation_${conversationId}`,
+              type: 'support_message',
+              actionUrl: `/admin?tab=support&conversation=${conversationId}`,
+            },
           },
-        });
+        );
 
         // #region agent log
         try {
-          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:notificationSent',message:'notification sent to admin',data:{adminId:admin.id,success:notificationResult},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        } catch(e) {}
-        this.logger.log(`[DEBUG] Notification sent to admin ${admin.email}: ${notificationResult}`);
+          fetch(
+            'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                location:
+                  'support.service.ts:notifyAdminsAboutNewConversation:notificationSent',
+                message: 'notification sent to admin',
+                data: { adminId: admin.id, success: notificationResult },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'E',
+              }),
+            },
+          ).catch(() => {});
+        } catch (e) {}
+        this.logger.log(
+          `[DEBUG] Notification sent to admin ${admin.email}: ${notificationResult}`,
+        );
         // #endregion
 
         if (notificationResult) {
@@ -676,16 +989,50 @@ export class SupportService {
 
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:complete',message:'notification process complete',data:{totalAdmins:admins.length,notifiedCount,skippedCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewConversation:complete',
+              message: 'notification process complete',
+              data: { totalAdmins: admins.length, notifiedCount, skippedCount },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'A',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       // #endregion
 
-      this.logger.log(`Notified ${notifiedCount} admins about new conversation ${conversationId} (skipped ${skippedCount})`);
+      this.logger.log(
+        `Notified ${notifiedCount} admins about new conversation ${conversationId} (skipped ${skippedCount})`,
+      );
     } catch (error) {
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewConversation:error',message:'error notifying admins',data:{errorMessage:error?.message,errorStack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewConversation:error',
+              message: 'error notifying admins',
+              data: { errorMessage: error?.message, errorStack: error?.stack },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'F',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       // #endregion
       this.logger.error(
         'Failed to notify admins about new conversation:',
@@ -701,23 +1048,69 @@ export class SupportService {
   ): Promise<void> {
     // #region agent log
     try {
-      fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewSupportRequest:entry',message:'notifyAdminsAboutNewSupportRequest called',data:{requestId,userId,topic},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-    } catch(e) {}
-    this.logger.log(`[DEBUG] notifyAdminsAboutNewSupportRequest called: requestId=${requestId}, userId=${userId}`);
+      fetch(
+        'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location:
+              'support.service.ts:notifyAdminsAboutNewSupportRequest:entry',
+            message: 'notifyAdminsAboutNewSupportRequest called',
+            data: { requestId, userId, topic },
+            timestamp: Date.now(),
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'G',
+          }),
+        },
+      ).catch(() => {});
+    } catch (e) {}
+    this.logger.log(
+      `[DEBUG] notifyAdminsAboutNewSupportRequest called: requestId=${requestId}, userId=${userId}`,
+    );
     // #endregion
-    
+
     try {
       const admins = await this.userRepository
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.notificationSettings', 'notificationSettings')
-        .where('user.role IN (:...roles)', { roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+        .where('user.role IN (:...roles)', {
+          roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        })
         .getMany();
 
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewSupportRequest:adminsFound',message:'admins found',data:{adminCount:admins.length,admins:admins.map(a=>({id:a.id,email:a.email,role:a.role,hasFcmToken:!!a.fcmToken}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-      } catch(e) {}
-      this.logger.log(`[DEBUG] Found ${admins.length} admins to notify (legacy method)`);
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewSupportRequest:adminsFound',
+              message: 'admins found',
+              data: {
+                adminCount: admins.length,
+                admins: admins.map((a) => ({
+                  id: a.id,
+                  email: a.email,
+                  role: a.role,
+                  hasFcmToken: !!a.fcmToken,
+                })),
+              },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'G',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
+      this.logger.log(
+        `[DEBUG] Found ${admins.length} admins to notify (legacy method)`,
+      );
       // #endregion
 
       if (admins.length === 0) {
@@ -730,10 +1123,12 @@ export class SupportService {
 
       for (const admin of admins) {
         const settings = (admin as any).notificationSettings;
-        
+
         if (settings && !settings.supportReplies) {
           skippedCount++;
-          this.logger.log(`[DEBUG] Skipped admin ${admin.email}: notifications disabled`);
+          this.logger.log(
+            `[DEBUG] Skipped admin ${admin.email}: notifications disabled`,
+          );
           continue;
         }
 
@@ -743,21 +1138,42 @@ export class SupportService {
           continue;
         }
 
-        const notificationResult = await this.fcmService.sendNotification(admin.id, {
-          title: 'Новое обращение в поддержку',
-          body: 'Создано новое обращение от пользователя',
-          data: {
-            id: `support_request_${requestId}`,
-            type: 'support_message',
-            actionUrl: `/admin?tab=support&request=${requestId}`,
+        const notificationResult = await this.fcmService.sendNotification(
+          admin.id,
+          {
+            title: 'Новое обращение в поддержку',
+            body: 'Создано новое обращение от пользователя',
+            data: {
+              id: `support_request_${requestId}`,
+              type: 'support_message',
+              actionUrl: `/admin?tab=support&request=${requestId}`,
+            },
           },
-        });
+        );
 
         // #region agent log
         try {
-          fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewSupportRequest:notificationSent',message:'notification sent to admin',data:{adminId:admin.id,success:notificationResult},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-        } catch(e) {}
-        this.logger.log(`[DEBUG] Notification sent to admin ${admin.email}: ${notificationResult}`);
+          fetch(
+            'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                location:
+                  'support.service.ts:notifyAdminsAboutNewSupportRequest:notificationSent',
+                message: 'notification sent to admin',
+                data: { adminId: admin.id, success: notificationResult },
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'H',
+              }),
+            },
+          ).catch(() => {});
+        } catch (e) {}
+        this.logger.log(
+          `[DEBUG] Notification sent to admin ${admin.email}: ${notificationResult}`,
+        );
         // #endregion
 
         if (notificationResult) {
@@ -767,16 +1183,50 @@ export class SupportService {
 
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewSupportRequest:complete',message:'notification process complete',data:{totalAdmins:admins.length,notifiedCount,skippedCount},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewSupportRequest:complete',
+              message: 'notification process complete',
+              data: { totalAdmins: admins.length, notifiedCount, skippedCount },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'G',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       // #endregion
 
-      this.logger.log(`Notified ${notifiedCount} admins about new support request ${requestId} (skipped ${skippedCount})`);
+      this.logger.log(
+        `Notified ${notifiedCount} admins about new support request ${requestId} (skipped ${skippedCount})`,
+      );
     } catch (error) {
       // #region agent log
       try {
-        fetch('http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'support.service.ts:notifyAdminsAboutNewSupportRequest:error',message:'error notifying admins',data:{errorMessage:error?.message,errorStack:error?.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      } catch(e) {}
+        fetch(
+          'http://127.0.0.1:7242/ingest/8c69d9e6-e12c-4335-8ddd-7b9bc9b0fafd',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              location:
+                'support.service.ts:notifyAdminsAboutNewSupportRequest:error',
+              message: 'error notifying admins',
+              data: { errorMessage: error?.message, errorStack: error?.stack },
+              timestamp: Date.now(),
+              sessionId: 'debug-session',
+              runId: 'run1',
+              hypothesisId: 'I',
+            }),
+          },
+        ).catch(() => {});
+      } catch (e) {}
       // #endregion
       this.logger.error(
         'Failed to notify admins about new support request:',

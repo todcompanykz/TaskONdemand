@@ -3,7 +3,7 @@ import { RedisService } from '../../redis/redis.service';
 
 /**
  * Service for managing cancel/refuse rate limits
- * 
+ *
  * Rules:
  * - Max 3 cancels OR refuses per 24h per user
  * - After limit: block claim for 24h

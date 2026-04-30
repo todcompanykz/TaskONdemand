@@ -72,7 +72,7 @@ export default function TaskCard({
   const firstPhoto = task.photoUrls?.[0]
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm hover:shadow-md border border-gray-200 dark:border-slate-800 transition-all duration-200 overflow-hidden">
+    <div className="card rounded-xl p-0 overflow-hidden">
       <div className="p-3 md:p-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex gap-3">
           <div className="h-24 w-24 md:h-28 md:w-28 shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800">

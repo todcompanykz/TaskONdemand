@@ -39,7 +39,9 @@ export class ReviewsService {
     }
 
     if (task.status !== TaskStatus.COMPLETED) {
-      throw new BadRequestException('Reviews can only be left for completed tasks');
+      throw new BadRequestException(
+        'Reviews can only be left for completed tasks',
+      );
     }
 
     // Verify user is part of the task (either creator or executor)
@@ -47,7 +49,9 @@ export class ReviewsService {
     const isExecutor = task.claimedById === fromUserId;
 
     if (!isCreator && !isExecutor) {
-      throw new BadRequestException('You can only review tasks you participated in');
+      throw new BadRequestException(
+        'You can only review tasks you participated in',
+      );
     }
 
     // Determine target user (the other party)

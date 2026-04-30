@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { SupportConversation, ConversationStatus } from '../entities/support-conversation.entity';
+import {
+  SupportConversation,
+  ConversationStatus,
+} from '../entities/support-conversation.entity';
 import { UserRole } from '../../common/enums/user-role.enum';
 
 @Injectable()
@@ -55,7 +58,9 @@ export class ConversationAccessGuard implements CanActivate {
       conversation.status === ConversationStatus.CLOSED &&
       user.role === UserRole.USER
     ) {
-      throw new ForbiddenException('Cannot send message to closed conversation');
+      throw new ForbiddenException(
+        'Cannot send message to closed conversation',
+      );
     }
 
     return true;

@@ -63,6 +63,9 @@ export class UserNotificationSettings {
   @Column({ type: 'boolean', default: true })
   supportReplies: boolean; // Ответы от поддержки
 
+  @Column({ type: 'boolean', default: true })
+  requireChatRequestApproval: boolean; // Подтверждение новых диалогов
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  Get,
   Body,
   Param,
   UseGuards,
@@ -22,7 +21,10 @@ export class ReviewsController {
     @Request() req,
     @Body() createReviewDto: CreateReviewDto,
   ) {
-    return this.reviewsService.createReview(taskId, req.user.id, createReviewDto);
+    return this.reviewsService.createReview(
+      taskId,
+      req.user.id,
+      createReviewDto,
+    );
   }
-
 }

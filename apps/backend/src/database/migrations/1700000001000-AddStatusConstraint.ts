@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Add database-level constraint to prevent invalid status transitions
- * 
+ *
  * This constraint ensures that status can only be one of the valid enum values.
  * Actual transition validation is handled by TaskStateTransitionService.
  */

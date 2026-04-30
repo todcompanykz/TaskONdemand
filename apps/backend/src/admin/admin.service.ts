@@ -67,19 +67,19 @@ export class AdminService {
 
         // Calculate suspicious flags
         const suspiciousFlags: string[] = [];
-        
+
         if (createdCount > 0 && cancelCount / createdCount > 0.5) {
           suspiciousFlags.push('high_cancel_rate');
         }
-        
+
         if (claimedCount > 0 && refuseCount / claimedCount > 0.5) {
           suspiciousFlags.push('high_refuse_rate');
         }
-        
+
         if (user.isRestricted) {
           suspiciousFlags.push('restricted');
         }
-        
+
         if (createdCount > 5) {
           const claimedTasksCount = await this.tasksRepository.count({
             where: {
@@ -98,7 +98,7 @@ export class AdminService {
           refuseCount,
           suspiciousFlags,
         };
-      })
+      }),
     );
 
     return usersWithStats;
@@ -175,7 +175,8 @@ export class AdminService {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     // Tasks created per day
-    const createdPerDay = await this.dataSource.query(`
+    const createdPerDay = await this.dataSource.query(
+      `
       SELECT 
         CAST("createdAt" AS DATE) as date,
         COUNT(*)::integer as created
@@ -183,10 +184,13 @@ export class AdminService {
       WHERE "createdAt" >= $1
       GROUP BY CAST("createdAt" AS DATE)
       ORDER BY date ASC
-    `, [thirtyDaysAgo]);
+    `,
+      [thirtyDaysAgo],
+    );
 
     // Tasks claimed per day (using updatedAt when status is CLAIMED)
-    const claimedPerDay = await this.dataSource.query(`
+    const claimedPerDay = await this.dataSource.query(
+      `
       SELECT 
         CAST("updatedAt" AS DATE) as date,
         COUNT(*)::integer as claimed
@@ -195,11 +199,16 @@ export class AdminService {
         AND "updatedAt" >= $1
       GROUP BY CAST("updatedAt" AS DATE)
       ORDER BY date ASC
-    `, [thirtyDaysAgo]);
+    `,
+      [thirtyDaysAgo],
+    );
 
     // Merge daily metrics
-    const dailyMap = new Map<string, { date: string; created: number; claimed: number }>();
-    
+    const dailyMap = new Map<
+      string,
+      { date: string; created: number; claimed: number }
+    >();
+
     createdPerDay.forEach((row: any) => {
       const date = row.date.toISOString().split('T')[0];
       dailyMap.set(date, { date, created: parseInt(row.created), claimed: 0 });
@@ -212,24 +221,26 @@ export class AdminService {
       dailyMap.set(date, existing);
     });
 
-    const dailyMetrics = Array.from(dailyMap.values()).sort((a, b) => 
-      a.date.localeCompare(b.date)
+    const dailyMetrics = Array.from(dailyMap.values()).sort((a, b) =>
+      a.date.localeCompare(b.date),
     );
 
     // Overall metrics
     const totalCreated = await this.tasksRepository.count();
-    const totalClaimed = await this.tasksRepository.count({ 
-      where: { status: TaskStatus.CLAIMED } 
+    const totalClaimed = await this.tasksRepository.count({
+      where: { status: TaskStatus.CLAIMED },
     });
-    const totalCancelled = await this.tasksRepository.count({ 
-      where: { status: TaskStatus.CANCELLED } 
+    const totalCancelled = await this.tasksRepository.count({
+      where: { status: TaskStatus.CANCELLED },
     });
 
     // Claim ratio
-    const claimRatio = totalCreated > 0 ? (totalClaimed / totalCreated) * 100 : 0;
+    const claimRatio =
+      totalCreated > 0 ? (totalClaimed / totalCreated) * 100 : 0;
 
     // Cancellation rate
-    const cancellationRate = totalCreated > 0 ? (totalCancelled / totalCreated) * 100 : 0;
+    const cancellationRate =
+      totalCreated > 0 ? (totalCancelled / totalCreated) * 100 : 0;
 
     // Average time to claim (in minutes)
     const avgTimeResult = await this.dataSource.query(`
@@ -239,8 +250,8 @@ export class AdminService {
       WHERE status = 'claimed'
     `);
 
-    const averageTimeToClaim = avgTimeResult[0]?.avg_minutes 
-      ? parseFloat(avgTimeResult[0].avg_minutes) 
+    const averageTimeToClaim = avgTimeResult[0]?.avg_minutes
+      ? parseFloat(avgTimeResult[0].avg_minutes)
       : 0;
 
     return {
@@ -273,17 +284,22 @@ export class AdminService {
     });
 
     // Send FCM notification
-    this.fcmService.sendNotification(userId, {
-      title: 'Аккаунт ограничен',
-      body: 'Ваш аккаунт был ограничен администратором. Обратитесь в поддержку для получения дополнительной информации.',
-      data: {
-        id: `user_restricted_${userId}`,
-        type: 'user_restricted',
-        actionUrl: '/settings/account',
-      },
-    }).catch((error) => {
-      this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
-    });
+    this.fcmService
+      .sendNotification(userId, {
+        title: 'Аккаунт ограничен',
+        body: 'Ваш аккаунт был ограничен администратором. Обратитесь в поддержку для получения дополнительной информации.',
+        data: {
+          id: `user_restricted_${userId}`,
+          type: 'user_restricted',
+          actionUrl: '/settings/account',
+        },
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Failed to send FCM notification to user ${userId}:`,
+          error,
+        );
+      });
 
     return updatedUser;
   }
@@ -308,17 +324,22 @@ export class AdminService {
     });
 
     // Send FCM notification
-    this.fcmService.sendNotification(userId, {
-      title: 'Ограничения сняты',
-      body: 'Ограничения с вашего аккаунта были сняты. Вы снова можете использовать все функции приложения.',
-      data: {
-        id: `user_unrestricted_${userId}`,
-        type: 'user_unrestricted',
-        actionUrl: '/feed',
-      },
-    }).catch((error) => {
-      this.logger.error(`Failed to send FCM notification to user ${userId}:`, error);
-    });
+    this.fcmService
+      .sendNotification(userId, {
+        title: 'Ограничения сняты',
+        body: 'Ограничения с вашего аккаунта были сняты. Вы снова можете использовать все функции приложения.',
+        data: {
+          id: `user_unrestricted_${userId}`,
+          type: 'user_unrestricted',
+          actionUrl: '/feed',
+        },
+      })
+      .catch((error) => {
+        this.logger.error(
+          `Failed to send FCM notification to user ${userId}:`,
+          error,
+        );
+      });
 
     return updatedUser;
   }
@@ -457,7 +478,9 @@ export class AdminService {
     }
 
     if (adminToken.isActivated) {
-      throw new BadRequestException('This admin token has already been activated');
+      throw new BadRequestException(
+        'This admin token has already been activated',
+      );
     }
 
     if (adminToken.expiresAt && adminToken.expiresAt < new Date()) {

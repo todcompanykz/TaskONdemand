@@ -21,12 +21,32 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<{ accessToken: string; user: User }> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ accessToken: string; user: User }> {
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:22',message:'Register entry',data:{email:registerDto.email,hasFirstName:!!registerDto.firstName,hasLastName:!!registerDto.lastName,hasPassword:!!registerDto.password,hasConfirmPassword:!!registerDto.confirmPassword},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:22',
+          message: 'Register entry',
+          data: {
+            email: registerDto.email,
+            hasFirstName: !!registerDto.firstName,
+            hasLastName: !!registerDto.lastName,
+            hasPassword: !!registerDto.password,
+            hasConfirmPassword: !!registerDto.confirmPassword,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'A',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     // Validate password match
@@ -58,9 +78,25 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:48',message:'Register user saved',data:{userId:user.id,userFirstName:user.firstName,userLastName:user.lastName},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:48',
+          message: 'Register user saved',
+          data: {
+            userId: user.id,
+            userFirstName: user.firstName,
+            userLastName: user.lastName,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'A',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     // Reload user to get role and permissions
@@ -79,12 +115,26 @@ export class AuthService {
     return { accessToken, user };
   }
 
-  async login(loginDto: LoginDto): Promise<{ accessToken: string; user: User }> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ accessToken: string; user: User }> {
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:72',message:'Login entry',data:{email:loginDto.email,hasPassword:!!loginDto.password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:72',
+          message: 'Login entry',
+          data: { email: loginDto.email, hasPassword: !!loginDto.password },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     const user = await this.usersRepository.findOne({
@@ -93,9 +143,27 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:80',message:'Login user found',data:{userFound:!!user,userId:user?.id,hasFirstName:!!user?.firstName,hasLastName:!!user?.lastName,hasPassword:!!user?.password},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:80',
+          message: 'Login user found',
+          data: {
+            userFound: !!user,
+            userId: user?.id,
+            hasFirstName: !!user?.firstName,
+            hasLastName: !!user?.lastName,
+            hasPassword: !!user?.password,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     if (!user) {
@@ -113,9 +181,21 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:95',message:'Login password check',data:{isPasswordValid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:95',
+          message: 'Login password check',
+          data: { isPasswordValid },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     if (!isPasswordValid) {
@@ -133,27 +213,71 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:126',message:'Login JWT payload created',data:{userId:user.id,email:user.email,role:user.role,permissions:user.permissions,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:126',
+          message: 'Login JWT payload created',
+          data: {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            permissions: user.permissions,
+            hasAccessToken: !!accessToken,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'C',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:134',message:'Login success',data:{userId:user.id,hasAccessToken:!!accessToken},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:134',
+          message: 'Login success',
+          data: { userId: user.id, hasAccessToken: !!accessToken },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'B',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     return { accessToken, user };
   }
 
-  async validateUser(userId: string): Promise<User & { role: string; permissions: string[] }> {
+  async validateUser(
+    userId: string,
+  ): Promise<User & { role: string; permissions: string[] }> {
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:144',message:'validateUser entry',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:144',
+          message: 'validateUser entry',
+          data: { userId },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'D',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     const user = await this.usersRepository.findOne({
@@ -162,9 +286,27 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:151',message:'validateUser user loaded',data:{userFound:!!user,userId:user?.id,email:user?.email,role:user?.role,permissions:user?.permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:151',
+          message: 'validateUser user loaded',
+          data: {
+            userFound: !!user,
+            userId: user?.id,
+            email: user?.email,
+            role: user?.role,
+            permissions: user?.permissions,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'D',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     if (!user) {
@@ -180,9 +322,25 @@ export class AuthService {
 
     // #region agent log
     try {
-      const logEntry = JSON.stringify({location:'auth.service.ts:165',message:'validateUser returning',data:{userId:result.id,role:result.role,permissions:result.permissions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})+'\n';
-      fs.appendFileSync(path.join(process.cwd(),'.cursor','debug.log'),logEntry);
-    } catch(e) {}
+      const logEntry =
+        JSON.stringify({
+          location: 'auth.service.ts:165',
+          message: 'validateUser returning',
+          data: {
+            userId: result.id,
+            role: result.role,
+            permissions: result.permissions,
+          },
+          timestamp: Date.now(),
+          sessionId: 'debug-session',
+          runId: 'run1',
+          hypothesisId: 'D',
+        }) + '\n';
+      fs.appendFileSync(
+        path.join(process.cwd(), '.cursor', 'debug.log'),
+        logEntry,
+      );
+    } catch (e) {}
     // #endregion
 
     return result;

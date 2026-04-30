@@ -93,8 +93,12 @@ export class InitialSchema1700000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "tasks" DROP CONSTRAINT "FK_tasks_claimedBy"`);
-    await queryRunner.query(`ALTER TABLE "tasks" DROP CONSTRAINT "FK_tasks_createdBy"`);
+    await queryRunner.query(
+      `ALTER TABLE "tasks" DROP CONSTRAINT "FK_tasks_claimedBy"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tasks" DROP CONSTRAINT "FK_tasks_createdBy"`,
+    );
     await queryRunner.query(`DROP INDEX "IDX_tasks_geoPoint"`);
     await queryRunner.query(`DROP INDEX "IDX_tasks_expiresAt"`);
     await queryRunner.query(`DROP INDEX "IDX_tasks_status"`);

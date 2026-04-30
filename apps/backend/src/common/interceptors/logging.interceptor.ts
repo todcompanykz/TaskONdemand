@@ -18,8 +18,14 @@ export class LoggingInterceptor implements NestInterceptor {
     const now = Date.now();
 
     // Log all requests to /support endpoints
-    if (url?.includes('/support') || path?.includes('/support') || originalUrl?.includes('/support')) {
-      this.logger.log(`[REQUEST] ${method} ${url || path || originalUrl} - User: ${request.user?.id || 'anonymous'}`);
+    if (
+      url?.includes('/support') ||
+      path?.includes('/support') ||
+      originalUrl?.includes('/support')
+    ) {
+      this.logger.log(
+        `[REQUEST] ${method} ${url || path || originalUrl} - User: ${request.user?.id || 'anonymous'}`,
+      );
     }
 
     return next.handle().pipe(
@@ -28,8 +34,14 @@ export class LoggingInterceptor implements NestInterceptor {
         const { statusCode } = response;
         const responseTime = Date.now() - now;
 
-        if (url?.includes('/support') || path?.includes('/support') || originalUrl?.includes('/support')) {
-          this.logger.log(`[RESPONSE] ${method} ${url || path || originalUrl} ${statusCode} - ${responseTime}ms`);
+        if (
+          url?.includes('/support') ||
+          path?.includes('/support') ||
+          originalUrl?.includes('/support')
+        ) {
+          this.logger.log(
+            `[RESPONSE] ${method} ${url || path || originalUrl} ${statusCode} - ${responseTime}ms`,
+          );
         }
       }),
     );

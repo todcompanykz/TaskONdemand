@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { existsSync } from 'fs';
+import { resolve } from 'path';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -14,6 +15,14 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { SupportModule } from './support/support.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { RootController } from './root.controller';
+import { AiModule } from './ai/ai.module';
+import { ChatModule } from './chat/chat.module';
+
+const cwdEnvPath = resolve(process.cwd(), '.env');
+const rootEnvPath = resolve(process.cwd(), '../../.env');
+const envFilePath = [cwdEnvPath, rootEnvPath].filter((path) =>
+  existsSync(path),
+);
 
 @Module({
   controllers: [RootController],
@@ -24,7 +33,7 @@ import { RootController } from './root.controller';
     }),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: envFilePath.length > 0 ? envFilePath : '.env',
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
@@ -36,7 +45,9 @@ import { RootController } from './root.controller';
     HealthModule,
     ReviewsModule,
     SupportModule,
+    ChatModule,
     NotificationsModule,
+    AiModule,
   ],
 })
 export class AppModule {}

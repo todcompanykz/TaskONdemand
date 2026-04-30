@@ -11,7 +11,7 @@ import { User } from '../../users/entities/user.entity';
 
 /**
  * Guard to check if user is blocked from claiming tasks
- * 
+ *
  * Blocks are set when user exceeds cancel/refuse limits (3 per 24h)
  * Block duration: 24 hours
  * Also checks if user is restricted by admin

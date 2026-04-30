@@ -9,6 +9,7 @@ import {
   HomeIcon, 
   PlusIcon, 
   ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
   UserIcon,
   Cog6ToothIcon
 } from '@heroicons/react/24/outline'
@@ -16,6 +17,7 @@ import {
   HomeIcon as HomeIconSolid,
   PlusIcon as PlusIconSolid,
   ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid,
   UserIcon as UserIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid
 } from '@heroicons/react/24/solid'
@@ -51,6 +53,12 @@ export default function MobileBottomNav() {
       label: t('nav.myTasks'),
       icon: ClipboardDocumentListIcon,
       iconSolid: ClipboardDocumentListIconSolid,
+    },
+    {
+      href: '/messages',
+      label: t('nav.chat'),
+      icon: ChatBubbleLeftRightIcon,
+      iconSolid: ChatBubbleLeftRightIconSolid,
     },
     ...(isAdmin ? [{
       href: '/admin',

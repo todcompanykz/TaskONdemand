@@ -1,4 +1,10 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+  TableIndex,
+} from 'typeorm';
 
 export class CreateSupportChatTables1700000010000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -187,7 +193,8 @@ export class CreateSupportChatTables1700000010000 implements MigrationInterface 
 
     for (const request of supportRequests) {
       // Create conversation
-      const conversationStatus = request.status === 'answered' ? 'closed' : 'open';
+      const conversationStatus =
+        request.status === 'answered' ? 'closed' : 'open';
       const lastMessageAt = request.answeredAt || request.createdAt;
 
       const [conversation] = await queryRunner.query(
@@ -243,23 +250,39 @@ export class CreateSupportChatTables1700000010000 implements MigrationInterface 
       }
     }
 
-    console.log(`Migrated ${supportRequests.length} support requests to conversations`);
+    console.log(
+      `Migrated ${supportRequests.length} support requests to conversations`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop indexes
-    await queryRunner.dropIndex('support_messages', 'IDX_support_messages_isRead_createdAt');
-    await queryRunner.dropIndex('support_messages', 'IDX_support_messages_senderId_createdAt');
-    await queryRunner.dropIndex('support_messages', 'IDX_support_messages_conversationId_createdAt');
+    await queryRunner.dropIndex(
+      'support_messages',
+      'IDX_support_messages_isRead_createdAt',
+    );
+    await queryRunner.dropIndex(
+      'support_messages',
+      'IDX_support_messages_senderId_createdAt',
+    );
+    await queryRunner.dropIndex(
+      'support_messages',
+      'IDX_support_messages_conversationId_createdAt',
+    );
     await queryRunner.dropIndex(
       'support_conversations',
       'IDX_support_conversations_status_priority_lastMessageAt',
     );
-    await queryRunner.dropIndex('support_conversations', 'IDX_support_conversations_userId_createdAt');
+    await queryRunner.dropIndex(
+      'support_conversations',
+      'IDX_support_conversations_userId_createdAt',
+    );
 
     // Drop foreign keys
     const supportMessagesTable = await queryRunner.getTable('support_messages');
-    const supportConversationsTable = await queryRunner.getTable('support_conversations');
+    const supportConversationsTable = await queryRunner.getTable(
+      'support_conversations',
+    );
 
     if (supportMessagesTable) {
       const foreignKeys = supportMessagesTable.foreignKeys;
