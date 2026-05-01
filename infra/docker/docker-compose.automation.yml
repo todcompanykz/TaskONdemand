@@ -1,6 +1,6 @@
 services:
   n8n:
-    image: n8nio/n8n:1.82.3
+    image: n8nio/n8n:latest
     container_name: tod-n8n
     restart: unless-stopped
     environment:
@@ -11,12 +11,16 @@ services:
       N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
       WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost/n8n/}
       N8N_PROXY_HOPS: "1"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-change-me-32-chars-minimum}
       GENERIC_TIMEZONE: ${N8N_TIMEZONE:-Asia/Almaty}
       TZ: ${N8N_TIMEZONE:-Asia/Almaty}
-      AI_API_KEY: ${AI_API_KEY:-}
+      # Authorization: Bearer … to LiteLLM; must match opal's LITELLM_MASTER_KEY (not OPENAI_API_KEY).
+      AI_API_KEY: ${N8N_TO_OPAL_BEARER:-${OPAL_MASTER_KEY:-change-me-opal-master-key}}
       AI_API_BASE_URL: ${AI_API_BASE_URL:-http://opal:4000/v1}
-      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+      # Default follows OPENAI_MODEL (.env) — OpenRouter-style ids when using OpenRouter upstream.
+      AI_MODEL: ${AI_MODEL:-${OPENAI_MODEL:-google/gemma-3-27b-it:free}}
       BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:3001}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
@@ -25,7 +29,6 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
       - ../n8n/workflows:/workflows
-    profiles: ["automation"]
     networks:
       - tod-network
     depends_on:
@@ -35,13 +38,15 @@ services:
     image: ghcr.io/berriai/litellm:main-latest
     container_name: tod-opal
     restart: unless-stopped
-    command: ["--host", "0.0.0.0", "--port", "4000"]
+    command: ["--host", "0.0.0.0", "--port", "4000", "--config", "/app/litellm-config.yaml"]
     environment:
       LITELLM_MASTER_KEY: ${OPAL_MASTER_KEY:-change-me-opal-master-key}
-      OPENAI_API_KEY: ${AI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-${AI_API_KEY:-}}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-${OPENAI_API_KEY:-${AI_API_KEY:-}}}
+    volumes:
+      - ./litellm-config.yaml:/app/litellm-config.yaml:ro
     ports:
       - "${OPAL_PORT:-4000}:4000"
-    profiles: ["automation"]
     networks:
       - tod-network
 

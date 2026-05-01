@@ -1,0 +1,111 @@
+[{
+  "id": "d1e2f3a4-b5c6-7890-def1-234567890abc",
+  "name": "Daily Task Digest",
+  "active": false,
+  "nodes": [
+    {
+      "id": "node-schedule",
+      "name": "Every Day at 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-pg",
+      "name": "Get Task Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (SELECT COUNT(*) FROM tasks WHERE status = 'created') AS open_tasks, (SELECT COUNT(*) FROM tasks WHERE status = 'claimed') AS in_progress, (SELECT COUNT(*) FROM tasks WHERE status = 'completed' AND \"updatedAt\"::date = CURRENT_DATE) AS completed_today, (SELECT COALESCE(SUM(reward), 0) FROM tasks WHERE status = 'created') AS total_reward_pool, (SELECT json_agg(t ORDER BY CASE t.urgency WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END) FROM (SELECT \"shortDescription\", reward, urgency, city, status FROM tasks WHERE status IN ('created', 'claimed') AND (\"expiresAt\" IS NULL OR \"expiresAt\" > CURRENT_TIMESTAMP) LIMIT 10) t) AS active_tasks;",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-build-prompt",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json;\nconst stats = {\n  open: data.open_tasks ?? 0,\n  inProgress: data.in_progress ?? 0,\n  completedToday: data.completed_today ?? 0,\n  rewardPool: data.total_reward_pool ?? 0\n};\nconst tasks = data.active_tasks || [];\n\nconst urgencyLabel = { high: 'СРОЧНО', medium: 'средний', low: 'низкий' };\nconst taskList = tasks.length > 0\n  ? tasks.map((t, i) =>\n      `${i + 1}. [${urgencyLabel[t.urgency] || t.urgency}] ${t.shortDescription} — ${t.reward}₸ (${t.city})`\n    ).join('\\n')\n  : 'Нет активных задач';\n\nconst highPriorityCount = tasks.filter(t => t.urgency === 'high').length;\n\nconst prompt = `Ты — ассистент платформы TaskOnDemand (биржа задач). Сделай краткий утренний дайджест на русском языке.\\n\\nСтатистика:\\n- Открытых задач: ${stats.open}\\n- В работе: ${stats.inProgress}\\n- Выполнено сегодня: ${stats.completedToday}\\n- Суммарный reward pool: ${stats.rewardPool}₸\\n- Срочных задач: ${highPriorityCount}\\n\\nАктивные задачи:\\n${taskList}\\n\\nНапиши дружелюбный дайджест в 3-4 предложения. Если есть срочные задачи — выдели их. Используй эмодзи.`;\n\nreturn { prompt, stats, taskCount: tasks.length, highPriorityCount };"
+      }
+    },
+    {
+      "id": "node-ai",
+      "name": "AI Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.AI_API_BASE_URL}}/chat/completions",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{'Bearer ' + $env.AI_API_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ model: $env.AI_MODEL || 'google/gemma-3-27b-it:free', messages: [{ role: 'user', content: $json.prompt }], temperature: 0.7 }) }}"
+      }
+    },
+    {
+      "id": "node-format",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const aiAnswer = $json?.choices?.[0]?.message?.content ?? 'AI не ответил.';\nconst prev = $('Build AI Prompt').item.json;\nconst stats = prev.stats;\nconst d = new Date();\nconst dateStr = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Almaty' });\n\nconst text = [\n  `📋 <b>Дайджест TaskOnDemand</b>`,\n  `📅 ${dateStr}`,\n  ``,\n  aiAnswer,\n  ``,\n  `📊 <b>Статистика:</b>`,\n  `• Открыто: ${stats.open} | В работе: ${stats.inProgress} | Выполнено сегодня: ${stats.completedToday}`,\n  `• 💰 Reward pool: ${stats.rewardPool}₸`\n].join('\\n');\n\nreturn { text };"
+      }
+    },
+    {
+      "id": "node-telegram",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage'}}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({ chat_id: $env.TELEGRAM_CHAT_ID, text: $json.text, parse_mode: 'HTML' }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Every Day at 8AM": {
+      "main": [[{ "node": "Get Task Data", "type": "main", "index": 0 }]]
+    },
+    "Get Task Data": {
+      "main": [[{ "node": "Build AI Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build AI Prompt": {
+      "main": [[{ "node": "AI Summary", "type": "main", "index": 0 }]]
+    },
+    "AI Summary": {
+      "main": [[{ "node": "Format Message", "type": "main", "index": 0 }]]
+    },
+    "Format Message": {
+      "main": [[{ "node": "Send to Telegram", "type": "main", "index": 0 }]]
+    }
+  }
+}]
