@@ -1,0 +1,53 @@
+services:
+  postgres:
+    build:
+      context: ../..
+      dockerfile: Dockerfile.postgres-18
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - tod-network
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - tod-network
+
+  backend:
+    build:
+      context: ../../apps/backend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: tod
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ci-test-secret-key-minimum-32-chars
+      FRONTEND_URL: http://localhost:3005
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tod-network
+
+networks:
+  tod-network:
+    driver: bridge

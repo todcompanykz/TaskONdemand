@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    COMPOSE_FILE    = "infra/docker/docker-compose.base.yml"
+    COMPOSE_FILE    = "infra/docker/docker-compose.ci.yml"
     COMPOSE_PROJECT = "jenkins-ci-${env.BUILD_NUMBER}"
   }
 
@@ -31,7 +31,7 @@ pipeline {
 
     stage('Build docker images') {
       steps {
-        sh 'docker compose -p $COMPOSE_PROJECT -f $COMPOSE_FILE build backend frontend'
+        sh 'docker compose -p $COMPOSE_PROJECT -f $COMPOSE_FILE build backend'
       }
     }
 
