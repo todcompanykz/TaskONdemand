@@ -13,6 +13,7 @@ dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -45,6 +46,8 @@ infra/nginx/ssl/server.key
 
 # Cursor debug logs
 .cursor/debug.log
+.claude/
+.vercel-home/
 
 # Database
 *.db

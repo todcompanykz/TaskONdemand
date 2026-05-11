@@ -15,6 +15,15 @@ import { ChatBlock } from '../chat/entities/chat-block.entity';
 
 config();
 
+function isTrue(value?: string): boolean {
+  return ['1', 'true', 'yes', 'on'].includes((value || '').toLowerCase());
+}
+
+const databaseUrl = process.env.DATABASE_URL;
+const useSsl =
+  isTrue(process.env.DATABASE_SSL) ||
+  (databaseUrl && process.env.DATABASE_SSL !== 'false');
+
 // Use paths relative to this file, so it works in both:
 // - ts-node dev: .../src/database (migrations are .ts)
 // - compiled prod: .../dist/**/database (migrations are .js)
@@ -22,6 +31,7 @@ const migrationsPath = [path.join(__dirname, 'migrations', '*.{ts,js}')];
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
+  url: databaseUrl,
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
@@ -43,6 +53,7 @@ export const dataSourceOptions: DataSourceOptions = {
   migrations: migrationsPath,
   synchronize: false,
   logging: true,
+  ssl: useSsl ? { rejectUnauthorized: false } : false,
 };
 
 const dataSource = new DataSource(dataSourceOptions);

@@ -5,6 +5,10 @@ import dataSource from './database/data-source';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import * as express from 'express';
 
+function normalizeOrigin(origin: string): string {
+  return origin.trim().replace(/\/$/, '');
+}
+
 async function bootstrap() {
   // Run database migrations before starting the application
   try {
@@ -68,7 +72,12 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new LoggingInterceptor());
 
-  // Dynamic CORS: allow requests from localhost and local network IPs
+  const configuredOrigins = (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((value) => normalizeOrigin(value))
+    .filter(Boolean);
+
+  // Dynamic CORS: allow local dev origins plus configured production/preview frontends.
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
@@ -76,16 +85,25 @@ async function bootstrap() {
         return callback(null, true);
       }
 
-      // Allow localhost and any IP in local network (192.168.x.x, 10.x.x.x, etc.)
+      const normalizedOrigin = normalizeOrigin(origin);
+
+      if (configuredOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      // Allow localhost, private IPs, and Vercel preview domains.
       const allowedPatterns = [
         /^http:\/\/localhost(:\d+)?$/,
         /^http:\/\/127\.0\.0\.1(:\d+)?$/,
         /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/,
         /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/,
         /^http:\/\/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+(:\d+)?$/,
+        /^https:\/\/.+\.vercel\.app$/,
       ];
 
-      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
+      const isAllowed = allowedPatterns.some((pattern) =>
+        pattern.test(normalizedOrigin),
+      );
 
       if (isAllowed) {
         callback(null, true);
