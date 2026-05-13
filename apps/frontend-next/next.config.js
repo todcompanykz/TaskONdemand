@@ -25,46 +25,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // REMOVED: env.NEXT_PUBLIC_API_URL to enable dynamic URL resolution
-  // API URL is now computed dynamically in api.ts based on window.location
-  
-  // Disable caching for development
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
-  },
-  
-  // Add headers to prevent aggressive caching (except service worker)
-  async headers() {
-    return [
-      {
-        source: '/sw.js',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-        ],
-      },
-      {
-        source: '/workbox-:hash.js',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, must-revalidate',
-          },
-        ],
-      },
-    ]
-  },
 }
 
 module.exports = withPWA(nextConfig)
