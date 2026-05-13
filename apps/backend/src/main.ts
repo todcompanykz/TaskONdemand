@@ -39,17 +39,17 @@ async function bootstrap() {
       );
     }
 
-    // Check users with SUPER_ADMIN role after migration
-    const User = (await import('./users/entities/user.entity')).User;
-    const { UserRole } = await import('./common/enums/user-role.enum');
-
-    const superAdmins = await dataSource.manager.find(User, {
-      where: { role: UserRole.SUPER_ADMIN },
-    });
+    // Use a narrow raw query here so startup doesn't depend on every optional
+    // entity column already existing before all compatibility migrations land.
+    const superAdmins = await dataSource.query(
+      `SELECT COUNT(*)::int AS count
+       FROM "users"
+       WHERE "role" = 'SUPER_ADMIN'`,
+    );
 
     await dataSource.destroy();
     console.log(
-      `Database migrations completed successfully. SUPER_ADMIN users found: ${superAdmins.length}`,
+      `Database migrations completed successfully. SUPER_ADMIN users found: ${superAdmins[0]?.count ?? 0}`,
     );
   } catch (error) {
     console.error('Error running database migrations:', error);
