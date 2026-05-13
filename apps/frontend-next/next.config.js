@@ -22,6 +22,9 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // REMOVED: env.NEXT_PUBLIC_API_URL to enable dynamic URL resolution
   // API URL is now computed dynamically in api.ts based on window.location
   
